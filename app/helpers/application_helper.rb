@@ -38,19 +38,14 @@ module ApplicationHelper
     link_to_function(name, ("add_fields(this, \"#{association}\", \"#{escape_javascript(fields)}\")").html_safe, add_html_classes(options, "btn btn-success") )
   end
 
-  def toggle_div divs
-    update_page do |page|
-      (divs.is_a?(Array) ? divs : divs.to_s).each_line do |div|
-        # add jquery '#div' to the div if its missing
-        div = div.to_s
-        div = "##{div}" if div[0] != "#"
-        page << "if ($('#{div}').is(':visible')) {"
-        page[div].hide()
-        page << "} else {"
-        page[div].show
-        page << "}"
-      end
+  def toggle_div(divs)
+    js_toggles = [divs].flatten.map do |id|
+      id = id.to_s
+      id = "##{id}" unless id[0] == "#"
+      "$(\"#{id}\").toggle();"
     end
+
+    js_toggles.join
   end
 
   def link_to_remove_puppetclass klass, host
