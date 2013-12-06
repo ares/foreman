@@ -63,6 +63,19 @@ FactoryGirl.define do
     end
   end
 
+  factory :permission do
+    sequence(:name) {|n| "view_#{n}" }
+    resource_type nil
+
+    trait :host do
+      resource_type 'Host'
+    end
+
+    trait :domain do
+      resource_type 'Domain'
+    end
+  end
+
   factory :filter do
     search nil
 
