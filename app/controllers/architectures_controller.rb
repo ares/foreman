@@ -41,4 +41,6 @@ class ArchitecturesController < ApplicationController
     end
   end
 
+  private
+
 end
