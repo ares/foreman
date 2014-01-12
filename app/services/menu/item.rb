@@ -22,8 +22,6 @@ module Menu
 
     def url
       @context.routes.url_for(url_hash.merge(:only_path=>true))
-      # hack until prefix is fixed
-      @context.routes.url_for(url_hash.merge(:host=>"localhost/foreman", :protocol=>'https', :only_path=>false))
     end
 
     def url_hash
