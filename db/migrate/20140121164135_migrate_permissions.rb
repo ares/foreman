@@ -31,12 +31,8 @@ class MigratePermissions < ActiveRecord::Migration
         next
       end
 
-      # check for unknown permissions, this should never happen, raise an exception if it does
-      role_permissions = permission_names.map do |name|
-        permission = Permission.find_by_name(name)
-        raise "unknown permission #{name}" if permission.nil?
-        permission
-      end
+      # filter out unknown permissions, this could be leftovers from an old plugin.
+      role_permissions = permission_names.map{ |name| Permission.find_by_name(name) }.compact
 
       # we group permissions by resource the belong to
       # then create a filter per resource
@@ -129,11 +125,11 @@ class MigratePermissions < ActiveRecord::Migration
       search = user.facts_andor == 'and' ? "(#{search}) and (#{filter})" : "#{search} or (#{filter})" unless filter.blank?
 
       # taxonomies
-      if Settings[:organizations_enabled]
+      if SETTINGS[:organizations_enabled]
         filter = user.organizations.map { |o| "organization_id = #{o.id}" }.join(' or ')
         search = user.organizations_andor == 'and' ? "(#{search}) and (#{filter})" : "#{search} or (#{filter})" unless filter.blank?
       end
-      if Settings[:locations_enabled]
+      if SETTINGS[:locations_enabled]
         filter = user.locations.map { |o| "location_id = #{o.id}" }.join(' or ')
         search = user.locations_andor == 'and' ? "(#{search}) and (#{filter})" : "#{search} or (#{filter})" unless filter.blank?
       end

@@ -55,7 +55,7 @@ class UserRole < ActiveRecord::Base
   end
 
   def build_user_role_cache
-    [ self.cached_user_roles.build(:user => owner, :role => role) ]
+    owner && role ? [ self.cached_user_roles.build(:user => owner, :role => role) ] : []
   end
 
   def build_user_group_role_cache(owner)
