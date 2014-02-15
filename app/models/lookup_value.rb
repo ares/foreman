@@ -1,5 +1,5 @@
 class LookupValue < ActiveRecord::Base
-  include Authorization
+  include Authorizable
   belongs_to :lookup_key, :counter_cache => true
   validates :match, :presence => true, :uniqueness => {:scope => :lookup_key_id}
   delegate :key, :to => :lookup_key
@@ -35,11 +35,11 @@ class LookupValue < ActiveRecord::Base
   end
 
   def validate_and_cast_value
-    return true if self.marked_for_destruction?
+    return true if self.marked_for_destruction? or !self.value.is_a? String
     begin
       self.value = lookup_key.cast_validate_value self.value
       true
-    rescue
+    rescue StandardError, SyntaxError => e
       errors.add(:value, _("is invalid %s") % lookup_key.key_type)
       false
     end
@@ -67,26 +67,6 @@ class LookupValue < ActiveRecord::Base
     return true unless md
     return true if Hostgroup.unscoped.find_by_name(md[1]) || Hostgroup.unscoped.find_by_label(md[1]) || host_or_hostgroup.try(:new_record?)
     errors.add(:match, _("%{match} does not match an existing host group") % { :match => match }) and return false
-  end
-
-  private
-
-  def enforce_permissions operation
-    # We get called again with the operation being set to create
-    return true if operation == "edit" and new_record?
-    allowed = case match
-      when /^fqdn=(.*)/
-        # check if current fqdn is in our allowed list
-        Host.my_hosts.where(:name => $1).exists? || self.host_or_hostgroup.try(:new_record?)
-      when /^hostgroup=(.*)/
-        # check if current hostgroup is in our allowed list
-        Hostgroup.my_groups.where(:label => $1).exists? || self.host_or_hostgroup.try(:new_record?)
-      else
-        false
-    end
-    return true if allowed
-    errors.add :base, _("You do not have permission to %s this Smart Variable") % operation
-    return false
   end
 
 end

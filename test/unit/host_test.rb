@@ -112,6 +112,16 @@ class HostTest < ActiveSupport::TestCase
     end
   end
 
+  test "lookup value has right matcher for a host" do
+    assert_difference('LookupValue.where(:lookup_key_id => lookup_keys(:five).id, :match => "fqdn=abc.mydomain.net").count') do
+      h = Host.create! :name => "abc", :mac => "aabbecddeeff", :ip => "2.3.4.3",
+        :domain => domains(:mydomain), :operatingsystem => operatingsystems(:redhat),
+        :subnet => subnets(:one), :architecture => architectures(:x86_64), :puppet_proxy => smart_proxies(:puppetmaster),
+        :environment => environments(:production), :disk => "empty partition",
+        :lookup_values_attributes => {"new_123456" => {"lookup_key_id" => lookup_keys(:five).id, "value"=>"some_value"}}
+    end
+  end
+
   test "should import facts from json stream" do
     h=Host.new(:name => "sinn1636.lan")
     h.disk = "!" # workaround for now
@@ -199,6 +209,18 @@ class HostTest < ActiveSupport::TestCase
     assert_nil host
   end
 
+  test "should not save if root password is undefined when the host is managed" do
+    host = Host.new :name => "myfullhost", :managed => true
+    assert !host.valid?
+    assert host.errors[:root_pass].any?
+  end
+
+  test "should save if root password is undefined when the compute resource is image capable" do
+    host = Host.new :name => "myfullhost", :managed => true, :compute_resource_id => compute_resources(:openstack).id
+    host.valid?
+    refute host.errors[:root_pass].any?
+  end
+
   test "should not save if neither ptable or disk are defined when the host is managed" do
     if unattended?
       host = Host.create :name => "myfullhost", :mac => "aabbecddeeff", :ip => "2.4.4.03",
@@ -242,7 +264,7 @@ class HostTest < ActiveSupport::TestCase
     host = Host.new :name => "myfullhost", :mac => "aabbecddeeff", :ip => "2.3.4.03",
       :domain => domains(:mydomain), :operatingsystem => operatingsystems(:redhat), :subnet => subnets(:one), :puppet_proxy => smart_proxies(:puppetmaster),
       :subnet => subnets(:one), :architecture => architectures(:x86_64), :environment => environments(:production), :managed => true,
-      :owner_type => "User"
+      :owner_type => "User", :root_pass => "xybxa6JUkz63w"
     assert host.valid?
   end
 
@@ -291,207 +313,6 @@ class HostTest < ActiveSupport::TestCase
     host.enabled = false
     host.save
     assert host.disabled?
-  end
-
-  def setup_user_and_host
-    @one            = users(:one)
-    @one.hostgroups.destroy_all
-    @one.domains.destroy_all
-    @one.user_facts.destroy_all
-    @one.save!
-    @host           = hosts(:one)
-    @host.owner     = users(:two)
-    @host.save!
-    User.current    = @one
-  end
-
-  def setup_filtered_user
-    # Can't use `setup_user_and_host` as it deletes the UserFacts
-    @one             = users(:one)
-    @one.hostgroups.destroy_all
-    @one.domains.destroy_all
-    @one.user_facts  = [user_facts(:one)]
-    @one.facts_andor = "and"
-    @one.save!
-    User.current    = @one
-  end
-
-  test "host cannot be edited without permission" do
-    setup_user_and_host
-    as_admin do
-      @one.roles = [Role.find_by_name("Viewer")]
-    end
-    assert !@host.update_attributes(:comment => "blahblahblah")
-    assert_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "any host can be edited when permitted" do
-    setup_user_and_host
-    as_admin do
-      @one.roles      = [Role.find_by_name("Edit hosts")]
-    end
-    assert @host.update_attributes(:comment => "blahblahblah")
-    assert_no_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "hosts can be edited when domains permit" do
-    setup_user_and_host
-    as_admin do
-      @one.roles      = [Role.find_by_name("Edit hosts")]
-      @one.domains    = [Domain.find_by_name("mydomain.net")]
-    end
-    assert @host.update_attributes(:comment => "blahblahblah")
-    assert_no_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "hosts cannot be edited when domains deny" do
-    setup_user_and_host
-    as_admin do
-      @one.roles      = [Role.find_by_name("Edit hosts")]
-      @one.domains    = [Domain.find_by_name("yourdomain.net")]
-    end
-    assert !@host.update_attributes(:comment => "blahblahblah")
-    assert_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "host cannot be created without permission" do
-    setup_user_and_host
-    as_admin do
-      @one.roles = [Role.find_by_name("Viewer")]
-    end
-    host = Host.create(:name => "blahblah", :mac => "aabbecddee19", :ip => "2.3.4.09",
-                       :domain => domains(:mydomain),  :operatingsystem => operatingsystems(:centos5_3),
-                       :architecture => architectures(:x86_64), :environment => environments(:production), :puppet_proxy => smart_proxies(:puppetmaster),
-                       :subnet => subnets(:one), :disk => "empty partition")
-    assert host.new_record?
-    assert_match /do not have permission/, host.errors.full_messages.join("\n")
-  end
-
-  test "any host can be created when permitted" do
-    setup_user_and_host
-    as_admin do
-      @one.roles = [Role.find_by_name("Create hosts")]
-    end
-    host = Host.create(:name => "blahblah", :mac => "aabbecddee19", :ip => "2.3.4.11",
-                       :domain => domains(:mydomain),  :operatingsystem => operatingsystems(:centos5_3),  :puppet_proxy => smart_proxies(:puppetmaster),
-                       :architecture => architectures(:x86_64), :environment => environments(:production),
-                       :subnet => subnets(:one), :disk => "empty partition")
-    assert !host.new_record?
-    assert_no_match /do not have permission/, host.errors.full_messages.join("\n")
-  end
-
-  test "hosts can be created when hostgroups permit" do
-    setup_user_and_host
-    as_admin do
-      @one.roles      = [Role.find_by_name("Create hosts")]
-      @one.hostgroups = [Hostgroup.find_by_name("Common")]
-    end
-    host = Host.create(:name => "blahblah", :mac => "aabbecddee19", :ip => "2.3.4.4",
-                       :domain => domains(:mydomain),  :operatingsystem => operatingsystems(:centos5_3),
-                       :architecture => architectures(:x86_64), :environment => environments(:production),
-                       :subnet => subnets(:one),
-                       :disk => "empty partition", :hostgroup => hostgroups(:common))
-    assert !host.new_record?
-    assert_no_match /do not have permission/, host.errors.full_messages.join("\n")
-  end
-
-  test "hosts cannot be created when hostgroups deny" do
-    setup_user_and_host
-    as_admin do
-      @one.roles      = [Role.find_by_name("Create hosts")]
-      @one.hostgroups = [Hostgroup.find_by_name("Unusual")]
-    end
-    host = Host.create(:name => "blahblah", :mac => "aabbecddee19", :ip => "2.3.4.9",
-                       :domain => domains(:mydomain),  :operatingsystem => operatingsystems(:centos5_3),
-                       :architecture => architectures(:x86_64), :environment => environments(:production),
-                       :subnet => subnets(:one),
-                       :disk => "empty partition", :hostgroup => hostgroups(:common))
-    assert host.new_record?
-    assert_match /do not have permission/, host.errors.full_messages.join("\n")
-  end
-
-  test "host cannot be destroyed without permission" do
-    setup_user_and_host
-    as_admin do
-      @one.roles = [Role.find_by_name("Viewer")]
-    end
-    assert !@host.destroy
-    assert_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "any host can be destroyed when permitted" do
-    setup_user_and_host
-    as_admin do
-      @one.roles = [Role.find_by_name("Destroy hosts")]
-      @host.host_classes.delete_all
-      assert @host.destroy
-    end
-    assert_no_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "hosts can be destroyed when ownership permits" do
-    setup_user_and_host
-    as_admin do
-      @one.roles = [Role.find_by_name("Destroy hosts")]
-      @host.update_attribute :owner,  users(:one)
-      @host.host_classes.delete_all
-      assert @host.destroy
-    end
-    assert_no_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "hosts cannot be destroyed when ownership denies" do
-    setup_user_and_host
-    as_admin do
-      @one.roles   = [Role.find_by_name("Destroy hosts")]
-      @one.domains = [domains(:yourdomain)] # This does not grant access but does ensure that access is constrained
-      @host.owner  = users(:two)
-      @host.save!
-    end
-    assert !@host.destroy
-    assert_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "fact filters restrict the my_hosts scope" do
-    setup_filtered_user
-    assert_equal 1, Host.my_hosts.count
-    assert_equal 'my5name.mydomain.net', Host.my_hosts.first.name
-  end
-
-  test "sti types altered in memory with becomes are still contained in my_hosts scope" do
-    class Host::Valid < Host::Base ; belongs_to :domain ; end
-    h = Host::Valid.new :name => "mytestvalidhost.foo.com"
-    setup_user_and_host
-    as_admin do
-      @one.domains = [domains(:yourdomain)] # ensure it matches the user filters
-      h.update_attribute :domain,  domains(:yourdomain)
-    end
-    h_new = h.becomes(Host::Managed) # change the type to break normal AR `==` method
-    assert Host::Base.my_hosts.include?(h_new)
-  end
-
-  test "host can be edited when user fact filter permits" do
-    setup_filtered_user
-    as_admin do
-      @one.roles  = [Role.find_by_name("Edit hosts")]
-      @host       = hosts(:one)
-      @host.owner = users(:two)
-      @host.save!
-    end
-    assert @host.update_attributes(:comment => "blahblahblah")
-    assert_no_match /do not have permission/, @host.errors.full_messages.join("\n")
-  end
-
-  test "host cannot be edited when user fact filter denies" do
-    setup_filtered_user
-    as_admin do
-      @one.roles  = [Role.find_by_name("Edit hosts")]
-      @host       = hosts(:two)
-      @host.owner = users(:two)
-      @host.save!
-    end
-    assert !@host.update_attributes(:comment => "blahblahblah")
-    assert_match /do not have permission/, @host.errors.full_messages.join("\n")
   end
 
   test "a fqdn Host should be assigned to a domain if such domain exists" do
@@ -614,7 +435,7 @@ class HostTest < ActiveSupport::TestCase
   end
 
   test "host os attributes must be associated with the host os" do
-    h = hosts(:redhat)
+    h = hosts(:one)
     h.managed = true
     h.architecture = architectures(:sparc)
     assert !h.os.architectures.include?(h.arch)
@@ -623,7 +444,7 @@ class HostTest < ActiveSupport::TestCase
   end
 
   test "host puppet classes must belong to the host environment" do
-    h = hosts(:redhat)
+    h = hosts(:one)
 
     pc = puppetclasses(:three)
     h.puppetclasses << pc
@@ -642,30 +463,38 @@ class HostTest < ActiveSupport::TestCase
     assert_equal ["#{pc} does not belong to the #{h.environment} environment"], h.errors[:puppetclasses]
   end
 
+  test "should not allow short root passwords for managed host" do
+    h = hosts(:one)
+    h.root_pass = "2short"
+    h.valid?
+    assert h.errors[:root_pass].include?("should be 8 characters or more")
+  end
+
   test "should allow to save root pw" do
-    h = hosts(:redhat)
+    h = hosts(:one)
     pw = h.root_pass
-    h.root_pass = "token"
+    h.root_pass = "12345678"
     h.hostgroup = nil
-    assert h.save
+    assert h.save!
     assert_not_equal pw, h.root_pass
   end
 
   test "should allow to revert to default root pw" do
-    h = hosts(:redhat)
-    h.root_pass = "token"
+    Setting[:root_pass] = "$1$default$hCkak1kaJPQILNmYbUXhD0"
+    h = hosts(:one)
+    h.root_pass = "xybxa6JUkz63w"
     assert h.save
-    h.root_pass = ""
-    assert h.save
+    h.root_pass = nil
+    assert h.save!
     assert_equal h.root_pass, Setting.root_pass
   end
 
   test "should generate a random salt when saving root pw" do
-    h = hosts(:redhat)
+    h = hosts(:one)
     pw = h.root_pass
-    h.root_pass = "token"
     h.hostgroup = nil
-    assert h.save
+    h.root_pass = "xybxa6JUkz63w"
+    assert h.save!
     first = h.root_pass
 
     # Check it's a $.$....$...... enhanced style password
@@ -673,13 +502,13 @@ class HostTest < ActiveSupport::TestCase
     assert first.split('$')[2].size >= 8
 
     # Check it changes
-    h.root_pass = "token"
+    h.root_pass = "12345678"
     assert h.save
     assert_not_equal first.split('$')[2], h.root_pass.split('$')[2]
   end
 
   test "should pass through existing salt when saving root pw" do
-    h = hosts(:redhat)
+    h = hosts(:one)
     pass = "$1$jmUiJ3NW$bT6CdeWZ3a6gIOio5qW0f1"
     h.root_pass = pass
     h.hostgroup = nil
@@ -688,7 +517,7 @@ class HostTest < ActiveSupport::TestCase
   end
 
   test "should use hostgroup root password" do
-    h = hosts(:redhat)
+    h = hosts(:one)
     h.root_pass = nil
     h.hostgroup = hostgroups(:common)
     assert h.save
@@ -697,7 +526,7 @@ class HostTest < ActiveSupport::TestCase
   end
 
   test "should use a nested hostgroup parent root password" do
-    h = hosts(:redhat)
+    h = hosts(:one)
     h.root_pass = nil
     h.hostgroup = hg = hostgroups(:common)
     assert h.save
@@ -709,7 +538,8 @@ class HostTest < ActiveSupport::TestCase
   end
 
   test "should use settings root password" do
-    h = hosts(:redhat)
+    Setting[:root_pass] = "$1$default$hCkak1kaJPQILNmYbUXhD0"
+    h = hosts(:one)
     h.root_pass = nil
     h.hostgroup = nil
     assert h.save
@@ -874,9 +704,13 @@ class HostTest < ActiveSupport::TestCase
     @one = users(:one)
     # add permission for user :one
     as_admin do
+      filter = FactoryGirl.build(:filter)
+      filter.permissions = [ Permission.find_by_name('edit_hosts') ]
+      filter.save!
       role = Role.find_or_create_by_name :name => "testing_role"
-      role.permissions = [:edit_hosts]
-      @one.roles = [role]
+      role.filters = [ filter ]
+      role.save!
+      @one.roles = [ role ]
       @one.save!
     end
     h = hosts(:one)

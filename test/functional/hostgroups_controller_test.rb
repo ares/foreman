@@ -58,17 +58,8 @@ class HostgroupsControllerTest < ActionController::TestCase
     assert !Hostgroup.exists?(hostgroup.id)
   end
 
-  def setup_user operation
-    @request.session[:user] = users(:one).id
-    @one = users(:one)
-    as_admin do
-      @one.roles = [Role.find_by_name('Anonymous'), Role.find_by_name('Viewer')]
-      role = Role.find_or_create_by_name :name => "hostgroups"
-      role.permissions = ["#{operation}_hostgroups".to_sym]
-      role.save!
-      @one.roles << [role]
-      @one.save!
-    end
+  def setup_user operation, type = 'hostgroups'
+    super
   end
 
   test 'user with viewer rights should fail to edit a hostgroup ' do
@@ -125,5 +116,33 @@ class HostgroupsControllerTest < ActionController::TestCase
     assert_equal one, Hostgroup.find_by_name("first").users.first
     assert_equal one, Hostgroup.find_by_name("second").users.first
   end
+
+  test "hostgroup rename changes matcher" do
+    hostgroup = hostgroups(:common)
+    put :update, {:id => hostgroup.id, :hostgroup => {:name => 'new_common'}}, set_session_user
+    assert_equal 'hostgroup=new_common', lookup_values(:hostgroupcommon).match
+    assert_equal 'hostgroup=new_common', lookup_values(:four).match
+  end
+
+  test "hostgroup rename changes matcher" do
+    hostgroup = hostgroups(:common)
+    put :update, {:id => hostgroup.id, :hostgroup => {:name => 'new_common'}}, set_session_user
+    assert_equal 'hostgroup=new_common', lookup_values(:hostgroupcommon).match
+    assert_equal 'hostgroup=new_common', lookup_values(:four).match
+  end
+
+  test "hostgroup rename of parent changes matcher of parent and child hostgroup" do
+    hostgroup = hostgroups(:parent)
+    put :update, {:id => hostgroup.id, :hostgroup => {:name => 'new_parent'}}, set_session_user
+    assert_equal 'hostgroup=new_parent', lookup_values(:five).match
+    assert_equal 'hostgroup=new_parent/inherited', lookup_values(:six).match
+  end
+
+  test "hostgroup rename of child only changes matcher of child hostgroup" do
+    hostgroup = hostgroups(:inherited)
+    put :update, {:id => hostgroup.id, :hostgroup => {:name => 'new_child'}}, set_session_user
+    assert_equal 'hostgroup=Parent/new_child', lookup_values(:six).match
+  end
+
 
 end

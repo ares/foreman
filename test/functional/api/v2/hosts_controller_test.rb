@@ -11,7 +11,8 @@ class Api::V2::HostsControllerTest < ActionController::TestCase
       :architecture_id     => Architecture.find_by_name('x86_64').id,
       :operatingsystem_id  => Operatingsystem.find_by_name('Redhat').id,
       :puppet_proxy_id     => smart_proxies(:one).id,
-      :compute_resource_id => compute_resources(:one).id
+      :compute_resource_id => compute_resources(:one).id,
+      :root_pass           => "xybxa6JUkz63w"
     }
   end
 
@@ -73,72 +74,63 @@ class Api::V2::HostsControllerTest < ActionController::TestCase
   end
 
   test "should allow access to restricted user who owns the host" do
-    as_user :restricted do
-      get :show, { :id => hosts(:owned_by_restricted).to_param }
-    end
+    setup_user 'view', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    get :show, { :id => hosts(:owned_by_restricted).to_param }
     assert_response :success
   end
 
   test "should allow to update for restricted user who owns the host" do
     disable_orchestration
-    as_user :restricted do
-      put :update, { :id => hosts(:owned_by_restricted).to_param, :host => {} }
-    end
+    setup_user 'edit', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    put :update, { :id => hosts(:owned_by_restricted).to_param, :host => {} }
     assert_response :success
   end
 
   test "should allow destroy for restricted user who owns the hosts" do
     assert_difference('Host.count', -1) do
-      as_user :restricted do
-        delete :destroy, { :id => hosts(:owned_by_restricted).to_param }
-      end
+      setup_user 'destroy', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+      delete :destroy, { :id => hosts(:owned_by_restricted).to_param }
     end
     assert_response :success
   end
 
   test "should allow show status for restricted user who owns the hosts" do
-    as_user :restricted do
-      get :status, { :id => hosts(:owned_by_restricted).to_param }
-    end
+    setup_user 'view', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    get :status, { :id => hosts(:owned_by_restricted).to_param }
     assert_response :success
   end
 
   test "should not allow access to a host out of users hosts scope" do
-    as_user :restricted do
-      get :show, { :id => hosts(:one).to_param }
-    end
+    setup_user 'view', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    get :show, { :id => hosts(:one).to_param }
     assert_response :not_found
   end
 
   test "should not list a host out of users hosts scope" do
-    as_user :restricted do
-      get :index, {}
-    end
+    setup_user 'view', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    get :index, {}
     assert_response :success
     hosts = ActiveSupport::JSON.decode(@response.body)
     ids = hosts['results'].map { |hash| hash['id'] }
-    assert !ids.include?(hosts(:one).id)
-    assert ids.include?(hosts(:owned_by_restricted).id)
+    refute_includes ids, hosts(:one).id
+    assert_includes ids, hosts(:owned_by_restricted).id
   end
 
   test "should not update host out of users hosts scope" do
-    as_user :restricted do
-      put :update, { :id => hosts(:one).to_param }
-    end
+    setup_user 'edit', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    put :update, { :id => hosts(:one).to_param }
     assert_response :not_found
   end
 
   test "should not delete hosts out of users hosts scope" do
-    as_user :restricted do
-      delete :destroy, { :id => hosts(:one).to_param }
-    end
+    setup_user 'destroy', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    delete :destroy, { :id => hosts(:one).to_param }
     assert_response :not_found
   end
 
   test "should not show status of hosts out of users hosts scope" do
-    as_user :restricted do
-      get :status, { :id => hosts(:one).to_param }
-    end
+    setup_user 'view', 'hosts', "owner_type = User and owner_id = #{users(:restricted).id}", :restricted
+    get :status, { :id => hosts(:one).to_param }
     assert_response :not_found
   end
 
@@ -323,7 +315,7 @@ class Api::V2::HostsControllerTest < ActionController::TestCase
     facts    = fact_json['facts']
     post :facts, {:name => hostname, :facts => facts}, set_session_user
     assert_response :unprocessable_entity
-    assert_equal 'A stub failure', JSON.parse(response.body)['errors']['foo'].first
+    assert_equal 'A stub failure', JSON.parse(response.body)['error']['errors']['foo'].first
   end
 
   context 'BMC proxy operations' do

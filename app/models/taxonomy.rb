@@ -1,4 +1,6 @@
 class Taxonomy < ActiveRecord::Base
+  include Authorizable
+
   audited :allow_mass_assignment => true
   has_associated_audits
 

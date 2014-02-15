@@ -1,8 +1,9 @@
 class Hostgroup < ActiveRecord::Base
   has_ancestry :orphan_strategy => :restrict
-  include Authorization
+  include Authorizable
   include Taxonomix
   include HostCommon
+  include NestedAncestryCommon
 
   before_destroy EnsureNotUsedBy.new(:hosts)
   has_many :hostgroup_classes, :dependent => :destroy
@@ -17,8 +18,6 @@ class Hostgroup < ActiveRecord::Base
   has_many :template_combinations, :dependent => :destroy
   has_many :config_templates, :through => :template_combinations
   before_save :remove_duplicated_nested_class
-  before_save :set_label, :on => [:create, :update, :destroy]
-  after_save :set_other_labels, :on => [:update, :destroy]
 
   alias_attribute :os, :operatingsystem
   audited :except => [:label], :allow_mass_assignment => true
@@ -35,11 +34,11 @@ class Hostgroup < ActiveRecord::Base
   }
 
   scoped_search :on => :name, :complete_value => :true
-  scoped_search :on => :label, :complete_value => :true
   scoped_search :in => :group_parameters,    :on => :value, :on_key=> :name, :complete_value => true, :only_explicit => true, :rename => :params
   scoped_search :in => :hosts, :on => :name, :complete_value => :true, :rename => "host"
   scoped_search :in => :puppetclasses, :on => :name, :complete_value => true, :rename => :class, :operators => ['= ', '~ ']
   scoped_search :in => :environment, :on => :name, :complete_value => :true, :rename => :environment
+  scoped_search :on => :id, :complete_value => :true
   if SETTINGS[:unattended]
     scoped_search :in => :architecture, :on => :name, :complete_value => :true, :rename => :architecture
     scoped_search :in => :operatingsystem, :on => :name, :complete_value => true, :rename => :os
@@ -134,11 +133,6 @@ class Hostgroup < ActiveRecord::Base
     read_attribute(:root_pass) || nested_root_pw || Setting[:root_pass]
   end
 
-  def get_label
-    return name if ancestry.empty?
-    ancestors.map{|a| a.name + "/"}.join + name
-  end
-
   def inherited_compute_profile_id
     read_attribute(:compute_profile_id) || nested_compute_profile_id
   end
@@ -151,20 +145,6 @@ class Hostgroup < ActiveRecord::Base
 
   def lookup_value_match
     "hostgroup=#{to_label}"
-  end
-
-  def set_label
-    self.label = get_label if (name_changed? || ancestry_changed? || label.blank?)
-  end
-
-  def set_other_labels
-    if name_changed? || ancestry_changed?
-      Hostgroup.where("ancestry IS NOT NULL").each do |hostgroup|
-        if hostgroup.path_ids.include?(self.id)
-          hostgroup.update_attributes(:label => hostgroup.get_label)
-        end
-      end
-    end
   end
 
   def nested_root_pw

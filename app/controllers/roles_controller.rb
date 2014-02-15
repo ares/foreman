@@ -17,7 +17,7 @@
 
 class RolesController < ApplicationController
   include Foreman::Controller::AutoCompleteSearch
-  before_filter :require_admin
+  before_filter :find_by_id, :only => [:clone, :edit, :update, :destroy]
 
   def index
     @roles = Role.search_for(params[:search], :order => params[:order]).paginate :page => params[:page]
@@ -25,7 +25,7 @@ class RolesController < ApplicationController
 
   def new
     # Prefills the form with 'default user' role permissions
-    @role        = Role.new({:permissions => Role.default_user.permissions})
+    @role = Role.new({:permissions => Role.default_user.permissions})
   end
 
   def create
@@ -37,12 +37,21 @@ class RolesController < ApplicationController
     end
   end
 
+  def clone
+    new_role = @role.dup :include => [:filters => :permissions]
+    new_role.name += '_clone'
+    if new_role.save
+      flash[:notice] = "Role #{new_role.name} cloned from role #{@role.name}"
+    else
+     flash[:error] = "Role #{@role.name} could not be cloned: #{new_role.errors.full_messages.join(', ')}"
+    end
+    redirect_to roles_url
+  end
+
   def edit
-    @role = Role.find(params[:id])
   end
 
   def update
-    @role = Role.find(params[:id])
     if @role.update_attributes(params[:role])
       process_success
     else
@@ -51,7 +60,6 @@ class RolesController < ApplicationController
   end
 
   def destroy
-    @role = Role.find(params[:id])
     if @role.destroy
       process_success
     else
@@ -59,16 +67,18 @@ class RolesController < ApplicationController
     end
   end
 
-  def report
-    @roles = Role.all(:order => 'builtin, name')
-    @permissions = Foreman::AccessControl.permissions.select { |p| !p.public? }
-    if request.post?
-      @roles.each do |role|
-        role.permissions = params[:permissions][role.id.to_s]
-        role.save
-      end
-      notice _("All non public permissions successfully updated")
-      redirect_to roles_url
+  private
+
+  def find_by_id
+    @role = Role.find(params[:id])
+  end
+
+  def action_permission
+    case params[:action]
+      when 'clone'
+        'view'
+      else
+        super
     end
   end
 end

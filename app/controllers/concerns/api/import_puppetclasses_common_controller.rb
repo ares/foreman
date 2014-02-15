@@ -16,9 +16,20 @@ module Api::ImportPuppetclassesCommonController
   param :smart_proxy_id, String, :required => false
   param :environment_id, String, :required => false
   param :dryrun, :bool, :required => false
+  param :except, String, :required => false, :desc => "Optional comma-deliminated string containing either 'new,updated,obsolete' used to limit the import_puppetclasses actions"
 
   def import_puppetclasses
     return unless changed_environments
+
+    # @changed is returned from the method above changed_environments
+    # Limit actions by setting @changed[kind] to empty hash {} (no action)
+    # if :except parameter is passed with comma deliminator import_puppetclasses?except=new,obsolete
+    if params[:except].present?
+      kinds = params[:except].split(',')
+      kinds.each do |kind|
+        @changed[kind] = {} if ["new", "obsolete", "updated"].include?(kind)
+      end
+    end
 
     # DRYRUN - /import_puppetclasses?dryrun - do not run PuppetClassImporter
     rabl_template = @environment ? 'show' : 'index'
@@ -79,8 +90,8 @@ module Api::ImportPuppetclassesCommonController
 
   def find_required_puppet_proxy
     id = params.keys.include?('smart_proxy_id') ? params['smart_proxy_id'] : params['id']
-    @smart_proxy   = SmartProxy.find_by_id(id.to_i) if id.to_i > 0
-    @smart_proxy ||= SmartProxy.find_by_name(id)
+    @smart_proxy   = SmartProxy.authorized(:view_smart_proxies).find_by_id(id.to_i) if id.to_i > 0
+    @smart_proxy ||= SmartProxy.authorized(:view_smart_proxies).find_by_name(id)
     unless @smart_proxy && SmartProxy.puppet_proxies.pluck("smart_proxies.id").include?(@smart_proxy.id)
       not_found 'We did not find a foreman proxy that can provide the information, ensure that this proxy has the puppet feature turned on.'
     end
@@ -97,8 +108,8 @@ module Api::ImportPuppetclassesCommonController
   end
 
   def find_optional_environment
-    @environment   = Environment.find_by_id(@env_id.to_i) if @env_id.to_i > 0
-    @environment ||= Environment.find_by_name(@env_id)
+    @environment   = Environment.authorized(:view_environments).find_by_id(@env_id.to_i) if @env_id.to_i > 0
+    @environment ||= Environment.authorized(:view_environments).find_by_name(@env_id)
     @environment
   end
 

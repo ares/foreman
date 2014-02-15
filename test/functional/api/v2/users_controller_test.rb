@@ -17,14 +17,14 @@ class Api::V2::UsersControllerTest < ActionController::TestCase
     get :show, { :id => users(:one).id }
     assert_response :success
     show_response = ActiveSupport::JSON.decode(@response.body)
-    assert !show_response.empty?
+    assert_not show_response.empty?
   end
 
   test "should show individual record by login name" do
     get :show, { :id => users(:one).login }
     assert_response :success
     show_response = ActiveSupport::JSON.decode(@response.body)
-    assert !show_response.empty?
+    assert_not show_response.empty?
   end
 
   test "should update user" do
@@ -92,8 +92,8 @@ class Api::V2::UsersControllerTest < ActionController::TestCase
       assert_response :forbidden
 
       response = ActiveSupport::JSON.decode(@response.body)
-      assert response['details'] == "You are trying to delete your own account"
-      assert response['message'] == "Access denied"
+      assert_equal "You are trying to delete your own account", response['error']['details']
+      assert_equal "Access denied", response['error']['message']
       assert User.exists?(user)
     end
   end

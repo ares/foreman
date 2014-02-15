@@ -43,7 +43,7 @@ class UserTest < ActiveSupport::TestCase
     @user.firstname = "The Riddle?"
     assert !@user.save
 
-    @user.firstname = " _''. - nah"
+    @user.firstname = "C_r'a-z.y( )<,Na=me;>"
     assert @user.save
   end
 
@@ -51,17 +51,17 @@ class UserTest < ActiveSupport::TestCase
     @user.lastname = "it's the JOKER$$$"
     assert !@user.save
 
-    @user.lastname = " _''. - nah"
+    @user.lastname = "C_r'a-z.y( )<,Na=me;>"
     assert @user.save
   end
 
-  test "firstname should not exceed the 30 characters" do
-    @user.firstname = "a" * 31
+  test "firstname should not exceed the 50 characters" do
+    @user.firstname = "a" * 51
     assert !@user.save
   end
 
-  test "lastname should not exceed the 30 characters" do
-    @user.firstname = "a" * 31
+  test "lastname should not exceed the 50 characters" do
+    @user.firstname = "a" * 51
     assert !@user.save
   end
 
@@ -127,14 +127,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   def setup_user operation
-    @one = users(:one)
-    as_admin do
-      role = Role.find_or_create_by_name :name => "#{operation}_users"
-      role.permissions = ["#{operation}_users".to_sym]
-      @one.roles = [role]
-      @one.save!
-    end
-    User.current = @one
+    super operation, "users"
   end
 
   test "user with create permissions should be able to create" do
@@ -192,36 +185,6 @@ class UserTest < ActiveSupport::TestCase
       assert record.valid?
       assert_not record.new_record?
     end
-  end
-
-  test "user with view permissions should not be able to create" do
-    setup_user "view"
-    record =  User.new :login => "dummy", :mail => "j@j.com", :auth_source_id => AuthSourceInternal.first.id
-    record.password_hash = "asd"
-    assert !record.save
-    assert record.valid?
-    assert record.new_record?
-  end
-
-  test "user with destroy permissions should be able to destroy" do
-    setup_user "destroy"
-    record =  users(:one)
-    assert record.destroy
-    assert record.frozen?
-  end
-
-  test "user with edit permissions should not be able to destroy" do
-    setup_user "edit"
-    record =  User.first
-    assert !record.destroy
-    assert !record.frozen?
-  end
-
-  test "user with edit permissions should be able to edit" do
-    setup_user "edit"
-    record      = users(:one)
-    record.login = "renamed"
-    assert record.save
   end
 
   test "user cannot assign role he has not assigned himself" do
@@ -284,14 +247,6 @@ class UserTest < ActiveSupport::TestCase
     setup_user "edit"
     record = users(:two)
     assert record.save
-  end
-
-  test "user with destroy permissions should not be able to edit" do
-    setup_user "destroy"
-    record       = users(:two)
-    record.login = 'renamed'
-    assert !record.save
-    assert record.valid?
   end
 
   test "should not be able to rename the admin account" do
@@ -361,6 +316,27 @@ class UserTest < ActiveSupport::TestCase
     user.role_ids = [foobar.id, barfoo.id]
     refute user.role_ids_changed?
     assert_equal user.role_ids_was, [foobar.id, barfoo.id]
+  end
+
+  test "admin? detection for user admin flag" do
+    admin = FactoryGirl.build(:user, :admin => true)
+    assert admin.admin?, 'user admin flag was missed'
+  end
+
+  test "admin? detection for group admin flag" do
+    admin = FactoryGirl.build(:user)
+    g1 = FactoryGirl.build(:usergroup)
+    g2 = FactoryGirl.build(:usergroup, :admin => true)
+    admin.cached_usergroups = [g1, g2]
+    assert admin.admin?, 'group admin flag was missed'
+  end
+
+  test "admin? is false if no flag is enabled" do
+    admin = FactoryGirl.build(:user)
+    g1 = FactoryGirl.build(:usergroup)
+    g2 = FactoryGirl.build(:usergroup)
+    admin.cached_usergroups = [g1, g2]
+    refute admin.admin?
   end
 
   test ".find_or_create_external_user" do
@@ -441,6 +417,18 @@ class UserTest < ActiveSupport::TestCase
     # update for another controller
     options = {:controller => 'hosts', :action => 'update', :id => User.current.id}
     assert_not User.current.editing_self?(options)
+  end
+
+  test "#can? for admin" do
+    Authorizer.any_instance.stubs(:can?).returns(false)
+    u = FactoryGirl.build(:user, :admin => true)
+    assert u.can?(:view_hosts_or_whatever_you_ask)
+  end
+
+  test "#can? for not admin" do
+    Authorizer.any_instance.stubs(:can?).returns('authorizer was asked')
+    u = FactoryGirl.build(:user)
+    assert_equal 'authorizer was asked', u.can?(:view_hosts_or_whatever_you_ask)
   end
 
 end

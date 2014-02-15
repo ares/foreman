@@ -21,16 +21,16 @@ module ComputeResourcesHelper
     "class='label #{s ? "label-success" : "label-default"}'".html_safe
   end
 
-  def vm_power_action vm
-    opts = hash_for_power_compute_resource_vm_path(:compute_resource_id => @compute_resource, :id => vm.identity)
+  def vm_power_action vm, authorizer = nil
+    opts = hash_for_power_compute_resource_vm_path(:compute_resource_id => @compute_resource, :id => vm.identity).merge(:auth_object => @compute_resource, :permission => 'power_compute_resources_vms', :authorizer => authorizer)
     html = vm.ready? ? { :confirm =>_("Are you sure you want to power %{act} %{vm}?") % { :act => action_string(vm).downcase.strip, :vm => vm } , :class => "btn btn-danger" } :
                        { :class => "btn btn-info" }
 
     display_link_if_authorized "Power #{action_string(vm)}", opts, html.merge(:method => :put)
   end
 
-  def vm_pause_action vm
-    opts = hash_for_pause_compute_resource_vm_path(:compute_resource_id => @compute_resource, :id => vm.identity)
+  def vm_pause_action vm, authorizer = nil
+    opts = hash_for_pause_compute_resource_vm_path(:compute_resource_id => @compute_resource, :id => vm.identity).merge(:auth_object => @compute_resource, :permission => 'power_compute_resources_vms', :authorizer => authorizer)
     pause_action = vm.ready? ? _('Pause') : _('Resume')
     html = vm.state.downcase == 'paused' ? { :class => "btn btn-info" } :
                                            { :confirm =>_("Are you sure you want to %{act} %{vm}?") % { :act => pause_action.downcase, :vm => vm } , :class => "btn btn-danger" }
@@ -40,7 +40,7 @@ module ComputeResourcesHelper
 
   def memory_options max_memory
     gb = 1024*1024*1024
-    opts = [0.25, 0.5, 0.75, 1, 2, 4, 8, 16]
+    opts = [0.25, 0.5, 0.75, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32]
     opts.map{|n| [number_to_human_size(n*gb), (n*gb).to_i] unless n > (max_memory / gb)}.compact
   end
 
