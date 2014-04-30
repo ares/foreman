@@ -29,17 +29,11 @@
           <tr>
             <th><%= s_("Usergroup|Name") %></th>
             <th><%= s_("Usergroup|Auth source") %></th>
-            <th></th>
           </tr>
           <% @usergroup.external_usergroups.each do |usergroup| %>
           <tr>
             <td><%= h usergroup.name %></td>
             <td><%= h usergroup.auth_source %></td>
-            <td><%= display_link_if_authorized(_('Refresh'),
-                                               hash_for_refresh_external_usergroup_path,
-                                               :method => :put,
-                                               :class => "btn btn-default", :title => 'sync users from this group') %>
-            </td>
           </tr>
           <% end %>
         </table>
