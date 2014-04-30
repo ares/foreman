@@ -8,7 +8,7 @@ class Usergroup < ActiveRecord::Base
   has_many :usergroup_members, :dependent => :destroy
   has_many :users,      :through => :usergroup_members, :source => :member, :source_type => 'User', :dependent => :destroy
   has_many :usergroups, :through => :usergroup_members, :source => :member, :source_type => 'Usergroup', :dependent => :destroy
-  has_many :external_usergroups, :dependent => :destroy
+  has_many :external_usergroups, :dependent => :destroy, :inverse_of => :usergroup
 
   has_many :cached_usergroup_members
   has_many :usergroup_parents, :dependent => :destroy, :foreign_key => 'member_id',
