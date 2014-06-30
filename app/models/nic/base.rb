@@ -3,6 +3,7 @@
 module Nic
   class Base < ActiveRecord::Base
     include Foreman::STI
+    has_ancestry
 
     self.table_name = 'nics'
 
@@ -12,7 +13,8 @@ module Nic
 
     before_validation :normalize_mac
 
-    validates :mac, :uniqueness => true, :presence => true, :mac_address => true
+    validates :mac, :uniqueness => true, :if => Proc.new { |o| o.is_root? }
+    validates :mac, :presence => true, :mac_address => true
 
     validate :uniq_with_hosts
 
@@ -22,6 +24,8 @@ module Nic
     scope :bmc, lambda { where(:type => "Nic::BMC") }
     scope :interfaces, lambda { where(:type => "Nic::Interface") }
     scope :managed, lambda { where(:type => "Nic::Managed") }
+    scope :virtual, lambda { where(:ancestry => nil) }
+    scope :physical, lambda { where('ancestry IS NOT NULL') }
 
     belongs_to_host :inverse_of => :interfaces, :class_name => "Host::Managed"
     # keep extra attributes needed for sub classes.
@@ -37,6 +41,7 @@ module Nic
     def uniq_with_hosts
       failed = false
       uniq_fields_with_hosts.each do |attr|
+        next unless self.is_root? && attr.to_s == 'mac'
         value = self.send(attr)
         unless value.blank?
           if host.send(attr) == value
