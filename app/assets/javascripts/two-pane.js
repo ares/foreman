@@ -54,11 +54,12 @@ function two_pane_submit(){
   $('input[type="submit"]').attr('disabled', true);
   $("body").css("cursor", "progress");
 
-  var url = $('.two-pane-right form').attr('action');
+  var form = $('.two-pane-right form');
+  var url = form.attr('action');
   $.ajax({
     type:'POST',
     url: url,
-    data: $('form').serialize(),
+    data: form.serialize(),
     success: function(response){
       right_pane_content(response);
     },
