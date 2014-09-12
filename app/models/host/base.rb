@@ -179,8 +179,24 @@ module Host
       @overwrite = value.to_s == "true"
     end
 
-    def has_primary_interface?
-      self.primary_interface.present?
+    def primary_interface
+      self.interfaces.where(:primary => true).try(:first)
+    end
+
+    def ip
+      self.primary_interface.try(:ip)
+    end
+
+    def mac
+      self.primary_interface.try(:mac)
+    end
+
+    def subnet
+      self.primary_interface.try(:subnet)
+    end
+
+    def domain
+      self.primary_interface.try(:domain)
     end
 
     def managed_interfaces

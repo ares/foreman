@@ -11,7 +11,8 @@ module Nic
                     :mac, :name,
                     :provider, :username, :password,
                     :identifier, :virtual, :link, :tag, :attached_to,
-                    :managed, :bond_options, :attached_devices, :mode
+                    :managed, :bond_options, :attached_devices, :mode,
+                    :primary,
                     :_destroy # used for nested_attributes
 
     before_validation :normalize_mac
@@ -20,7 +21,8 @@ module Nic
     validates :mac, :presence => true, :unless => :virtual?
     validates :mac, :mac_address => true, :allow_blank => true
 
-    validate :uniq_with_hosts
+    # TODO uniq on primary per host
+    # validate :uniq_with_hosts
 
     validates :host, :presence => true, :if => Proc.new { |nic| nic.require_host? }
 

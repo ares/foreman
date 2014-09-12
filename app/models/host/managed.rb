@@ -182,7 +182,8 @@ class Host::Managed < Host::Base
   end
 
   def fqdn_changed?
-    name_changed? || domain_id_changed?
+    # TODO refactor domain_id_changed? into Nics
+    name_changed? # || domain_id_changed?
   end
 
   def fqdn_was
@@ -886,8 +887,9 @@ class Host::Managed < Host::Base
   end
 
   def normalize_addresses
-    self.mac = Net::Validations.normalize_mac(mac)
-    self.ip  = Net::Validations.normalize_ip(ip)
+    # TODO move this to Nics
+    # self.primary_interface.mac = Net::Validations.normalize_mac(mac)
+    # self.primary_interface.ip  = Net::Validations.normalize_ip(ip)
   end
 
   def force_lookup_value_matcher
