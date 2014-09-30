@@ -3,7 +3,7 @@ FactoryGirl.define do
     sequence(:name) { |n| "host#{n}" }
     sequence(:hostname) { |n| "host#{n}" }
     sequence(:ip) { |n| IPAddr.new(n, Socket::AF_INET).to_s }
-    sequence(:mac) { |n| "01:23:45:67:89:" + ("%02x" % "#{n%256}") }
+    sequence(:mac) { |n| "01:23:45:67:89:" + n.to_s(16).rjust(2, '0') }
     root_pass 'xybxa6JUkz63w'
     domain
     environment
@@ -196,11 +196,11 @@ FactoryGirl.define do
   end
   factory :nic_managed, :class => Nic::Interface, :parent => :nic_base do
     type 'Nic::Managed'
-    sequence(:mac) { |n| "01:23:45:ab:cd:" + ("%02x" % "#{n%256}") }
+    sequence(:mac) { |n| "01:23:45:ab:cd:" + n.to_s(16).rjust(2, '0') }
   end
   factory :nic_bmc, :class => Nic::Interface, :parent => :nic_base do
     type 'Nic::BMC'
-    sequence(:mac) { |n| "01:23:45:ab:ef:" + ("%02x" % "#{n%256}") }
+    sequence(:mac) { |n| "01:23:45:ab:ef:" + n.to_s(16).rjust(2, '0') }
   end
   factory :nic_bond, :class => Nic::Bond, :parent => :nic_base do
     type 'Nic::Bond'

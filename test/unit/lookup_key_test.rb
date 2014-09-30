@@ -3,21 +3,11 @@ require 'test_helper'
 class LookupKeyTest < ActiveSupport::TestCase
 
   def setup
-    @host1 = FactoryGirl.create(:host,
-                                :location => taxonomies(:location1),
-                                :organization => taxonomies(:organization1),
-                                :puppetclasses => [puppetclasses(:one)],
-                                :environment => environments(:production))
-    @host2 = FactoryGirl.create(:host,
-                                :location => taxonomies(:location1),
-                                :organization => taxonomies(:organization1),
-                                :puppetclasses => [puppetclasses(:one)],
-                                :environment => environments(:production))
-    @host3 = FactoryGirl.create(:host,
-                                :location => taxonomies(:location1),
-                                :organization => taxonomies(:organization1),
-                                :puppetclasses => [puppetclasses(:one)],
-                                :environment => environments(:production))
+    @host1, @host2, @host3 = FactoryGirl.create_list(:host, 3,
+                               :location      => taxonomies(:location1),
+                               :organization  => taxonomies(:organization1),
+                               :puppetclasses => [puppetclasses(:one)],
+                               :environment   => environments(:production))
   end
 
   def test_element_seperations

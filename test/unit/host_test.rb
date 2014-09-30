@@ -1550,9 +1550,9 @@ end # end of context "location or organizations are not enabled"
   end
 
   test 'fqdn of host without period in name returns name concatenated with domain' do
-    host = Host::Managed.new(:name => name = "otherfullhost", :domain => domains(:mydomain) )
-    assert_equal "otherfullhost", host.name
-    assert_equal "mydomain.net", host.domain.name
+    host = Host::Managed.new(:name => 'otherfullhost', :domain => domains(:mydomain) )
+    assert_equal 'otherfullhost', host.name
+    assert_equal 'mydomain.net', host.domain.name
     assert_equal 'otherfullhost.mydomain.net', host.fqdn
   end
 
