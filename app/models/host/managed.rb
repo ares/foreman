@@ -143,14 +143,16 @@ class Host::Managed < Host::Base
     include Orchestration::Realm
     include HostTemplateHelpers
 
-    validates :ip, :uniqueness => true, :if => Proc.new {|host| host.require_ip_validation?}
-    validates :mac, :uniqueness => true, :mac_address => true, :unless => Proc.new { |host| host.compute? or !host.managed }
-    validates :architecture_id, :operatingsystem_id, :domain_id, :presence => true, :if => Proc.new {|host| host.managed}
-    validates :mac, :presence => true, :unless => Proc.new { |host| host.compute? or !host.managed }
+    # TODO fix this
+    # validates :ip, :uniqueness => true, :if => Proc.new {|host| host.require_ip_validation?}
+    # validates :mac, :uniqueness => true, :mac_address => true, :unless => Proc.new { |host| host.compute? or !host.managed }
+    # validates :domain_id, :presence => true, :if => Proc.new {|host| host.managed}
+    validates :architecture_id, :operatingsystem_id, :presence => true, :if => Proc.new {|host| host.managed}
+    # validates :mac, :presence => true, :unless => Proc.new { |host| host.compute? or !host.managed }
     validates :root_pass, :length => {:minimum => 8, :message => _('should be 8 characters or more')},
                           :presence => {:message => N_('should not be blank - consider setting a global or host group default')},
                           :if => Proc.new { |host| host.managed && host.pxe_build? }
-    validates :ip, :format => {:with => Net::Validations::IP_REGEXP}, :if => Proc.new { |host| host.require_ip_validation? }
+    # validates :ip, :format => {:with => Net::Validations::IP_REGEXP}, :if => Proc.new { |host| host.require_ip_validation? }
     validates :ptable_id, :presence => {:message => N_("cant be blank unless a custom partition has been defined")},
                           :if => Proc.new { |host| host.managed and host.disk.empty? and not Foreman.in_rake? and host.pxe_build? }
     validates :serial, :format => {:with => /[01],\d{3,}n\d/, :message => N_("should follow this format: 0,9600n8")},

@@ -84,13 +84,12 @@ class NicTest < ActiveSupport::TestCase
     setup do
       @subnet    = subnets(:five)
       @domain    = domains(:mydomain)
-      @interface = nics(:bmc)
-      @interface.subnet = @subnet
-      @interface.domain = @domain
+      @interface = FactoryGirl.create(:nic_bmc, :host => FactoryGirl.create(:host),
+                                      :subnet => @subnet, :domain => @domain, :name => 'bmc')
     end
 
     test 'Nic::BMC should have hostname containing name and domain name' do
-      assert_equal "#{@interface.name}.#{@interface.domain.name}", @interface.hostname
+      assert_equal "#{@interface.name}.#{@domain.name}", @interface.hostname
     end
 
     test 'Nic::BMC should have hostname containing name when domain nil' do
@@ -114,6 +113,44 @@ class NicTest < ActiveSupport::TestCase
       assert_raise Foreman::Exception do
         @interface.proxy
       end
+    end
+
+    test "we can't destroy primary interface of managed host" do
+      host = FactoryGirl.create(:host, :managed)
+      interface = host.primary_interface
+      refute interface.destroy
+      assert_includes interface.errors.keys, :primary
+    end
+
+    test "we can destroy non primary interface of managed host" do
+      host = FactoryGirl.create(:host, :managed)
+      interface = FactoryGirl.create(:nic_managed, :primary => false, :host => host)
+      assert interface.destroy
+    end
+
+    test "we can destroy any interface of unmanaged host" do
+      host = FactoryGirl.create(:host)
+      interface = host.primary_interface
+      assert interface.destroy
+    end
+
+    test "we can destroy primary interface when deleting the host" do
+      host = FactoryGirl.create(:host, :managed)
+      interface = host.primary_interface
+      refute interface.destroy
+      assert host.destroy
+    end
+
+    test "host can have one primary interface at most" do
+      host = FactoryGirl.create(:host)
+
+      # factory already created primary interface
+      interface = FactoryGirl.build(:nic_managed, :primary => true, :host => host)
+      refute interface.save
+      assert_includes interface.errors.keys, :primary
+
+      interface.primary = false
+      assert interface.save
     end
   end
 

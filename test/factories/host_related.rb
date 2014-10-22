@@ -1,11 +1,46 @@
 FactoryGirl.define do
+  factory :ptable do
+    sequence(:name) { |n| "ptable#{n}" }
+    layout 'zerombr yes\nclearpart --all    --initlabel\npart /boot --fstype ext3 --size=<%= 10 * 10 %> --asprimary\npart /     --f   stype ext3 --size=1024 --grow\npart swap  --recommended'
+  end
+
+  factory :parameter do
+    sequence(:name) { |n| "parameter#{n}" }
+    sequence(:value) { |n| "parameter value #{n}" }
+    type 'CommonParameter'
+  end
+  factory :host_parameter, :parent => :parameter, :class => HostParameter do
+    type 'HostParameter'
+  end
+  factory :hostgroup_parameter, :parent => :parameter, :class => GroupParameter do
+    type 'GroupParameter'
+  end
+  factory :nic_base do
+    sequence(:identifier) { |n| "eth#{n}" }
+    sequence(:mac) { |n| "00:00:00:00:" + n.to_s(16).rjust(4, '0').insert(2, ':') }
+  end
+  factory :nic_interface, :class => Nic::Interface, :parent => :nic_base do
+    type 'Nic::Interface'
+  end
+  factory :nic_managed, :class => Nic::Managed, :parent => :nic_interface do
+    type 'Nic::Managed'
+    sequence(:mac) { |n| "01:23:45:ab:cd:" + n.to_s(16).rjust(2, '0') }
+  end
+  factory :nic_bmc, :class => Nic::BMC, :parent => :nic_managed do
+    type 'Nic::BMC'
+    sequence(:mac) { |n| "01:23:45:ab:ef:" + n.to_s(16).rjust(2, '0') }
+    provider 'IPMI'
+  end
+  factory :nic_bond, :class => Nic::Bond, :parent => :nic_managed do
+    type 'Nic::Bond'
+    mode 'balance-rr'
+  end
+
   factory :host do
     sequence(:name) { |n| "host#{n}" }
     sequence(:hostname) { |n| "host#{n}" }
-    sequence(:ip) { |n| IPAddr.new(n, Socket::AF_INET).to_s }
-    sequence(:mac) { |n| "01:23:45:67:" + n.to_s(16).rjust(4, '0').insert(2, ':') }
+    interfaces { [ FactoryGirl.build(:nic_managed, :primary => true, :domain => FactoryGirl.create(:domain)) ] }
     root_pass 'xybxa6JUkz63w'
-    domain
     environment
 
     trait :with_medium do
@@ -170,42 +205,5 @@ FactoryGirl.define do
     trait :with_subnet do
       subnet
     end
-  end
-
-  factory :ptable do
-    sequence(:name) { |n| "ptable#{n}" }
-    layout 'zerombr yes\nclearpart --all    --initlabel\npart /boot --fstype ext3 --size=<%= 10 * 10 %> --asprimary\npart /     --f   stype ext3 --size=1024 --grow\npart swap  --recommended'
-  end
-
-
-  factory :parameter do
-    sequence(:name) { |n| "parameter#{n}" }
-    sequence(:value) { |n| "parameter value #{n}" }
-    type 'CommonParameter'
-  end
-  factory :host_parameter, :parent => :parameter, :class => HostParameter do
-    type 'HostParameter'
-  end
-  factory :hostgroup_parameter, :parent => :parameter, :class => GroupParameter do
-    type 'GroupParameter'
-  end
-  factory :nic_base do
-    sequence(:identifier) { |n| "eth#{n}" }
-    sequence(:mac) { |n| "00:00:00:00:" + n.to_s(16).rjust(4, '0').insert(2, ':') }
-  end
-  factory :nic_interface, :class => Nic::Interface, :parent => :nic_base do
-    type 'Nic::Interface'
-  end
-  factory :nic_managed, :class => Nic::Interface, :parent => :nic_base do
-    type 'Nic::Managed'
-    sequence(:mac) { |n| "01:23:45:ab:cd:" + n.to_s(16).rjust(2, '0') }
-  end
-  factory :nic_bmc, :class => Nic::Interface, :parent => :nic_base do
-    type 'Nic::BMC'
-    sequence(:mac) { |n| "01:23:45:ab:ef:" + n.to_s(16).rjust(2, '0') }
-  end
-  factory :nic_bond, :class => Nic::Bond, :parent => :nic_base do
-    type 'Nic::Bond'
-    mode 'balance-rr'
   end
 end

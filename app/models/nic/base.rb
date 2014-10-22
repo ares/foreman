@@ -16,6 +16,7 @@ module Nic
                     :_destroy # used for nested_attributes
 
     before_validation :normalize_mac
+    before_destroy :not_required_interface
 
     validates :mac, :uniqueness => {:scope => :virtual}, :unless => :virtual?
     validates :mac, :presence => true, :unless => :virtual?
@@ -25,6 +26,8 @@ module Nic
     # validate :uniq_with_hosts
 
     validates :host, :presence => true, :if => Proc.new { |nic| nic.require_host? }
+
+    validate :exclusive_primary_interface
 
     scope :bootable, lambda { where(:type => "Nic::Bootable") }
     scope :bmc, lambda { where(:type => "Nic::BMC") }
@@ -99,6 +102,20 @@ module Nic
     # do we require a host object associate to the interface? defaults to true
     def require_host?
       true
+    end
+
+    def not_required_interface
+      if host && host.managed? && self.primary?
+        self.errors.add :primary, _("can't delete primary interface of managed host")
+        return false
+      end
+    end
+
+    def exclusive_primary_interface
+      if host && self.primary?
+        primaries = host.interfaces.select { |i| i.primary? && i != self }
+        errors.add :primary, _("host already has primary interface") unless primaries.empty?
+      end
     end
 
   end
