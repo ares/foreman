@@ -30,7 +30,7 @@ module Nic
     validate :exclusive_primary_interface
     validate :exclusive_provision_interface
     validates :domain, :presence => true, :if => Proc.new { |nic| nic.primary? }
-    validates :ip, :if => Proc.new { |nic| nic.require_ip_validation? }
+    validates :ip, :presence => true, :if => Proc.new { |nic| nic.require_ip_validation? }
 
     scope :bootable, lambda { where(:type => "Nic::Bootable") }
     scope :bmc, lambda { where(:type => "Nic::BMC") }
