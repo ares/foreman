@@ -39,6 +39,23 @@ class HostTest < ActiveSupport::TestCase
     assert_equal "#{host.shortname}.yourdomain.net", host.name
   end
 
+  test "unmanaged host should save without primary interface" do
+    host = FactoryGirl.build(:host)
+    host.interfaces = []
+    assert host.save
+  end
+
+  test "managed host should not save without primary interface" do
+    host = FactoryGirl.build(:host, :managed)
+    host.interfaces = []
+    refute host.save
+    assert_includes host.errors.keys, :interfaces
+
+
+    host.interfaces = [ FactoryGirl.create(:nic_managed, :primary => true, :host => host) ]
+    assert host.save
+  end
+
   test "should fix mac address hyphens" do
     host = Host.create :name => "myhost", :mac => "aa-bb-cc-dd-ee-ff"
     assert_equal "aa:bb:cc:dd:ee:ff", host.mac

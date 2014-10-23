@@ -180,7 +180,11 @@ module Host
     end
 
     def primary_interface
-      self.interfaces.where(:primary => true).try(:first)
+      get_interface_by_flag(:primary)
+    end
+
+    def provision_interface
+      get_interface_by_flag(:provision)
     end
 
     def ip
@@ -256,5 +260,15 @@ module Host
           Nic::Managed
       end
     end
+
+    # we can't use SQL query for new records, because interfaces may not exist yet
+    def get_interface_by_flag(flag)
+      if self.new_record?
+        self.interfaces.detect(&flag)
+      else
+        self.interfaces.where(flag => true).first
+      end
+    end
+
   end
 end

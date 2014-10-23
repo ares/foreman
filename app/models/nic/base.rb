@@ -12,7 +12,7 @@ module Nic
                     :provider, :username, :password,
                     :identifier, :virtual, :link, :tag, :attached_to,
                     :managed, :bond_options, :attached_devices, :mode,
-                    :primary,
+                    :primary, :provision,
                     :_destroy # used for nested_attributes
 
     before_validation :normalize_mac
@@ -28,6 +28,9 @@ module Nic
     validates :host, :presence => true, :if => Proc.new { |nic| nic.require_host? }
 
     validate :exclusive_primary_interface
+    validate :exclusive_provision_interface
+    validates :domain, :presence => true, :if => Proc.new { |nic| nic.primary? }
+    validates :ip, :if => Proc.new { |nic| nic.require_ip_validation? }
 
     scope :bootable, lambda { where(:type => "Nic::Bootable") }
     scope :bmc, lambda { where(:type => "Nic::BMC") }
@@ -46,7 +49,7 @@ module Nic
     class Jail < ::Safemode::Jail
       allow :managed?, :subnet, :virtual?, :mac, :ip, :identifier, :attached_to,
             :link, :tag, :domain, :vlanid, :bond_options, :attached_devices, :mode,
-            :attached_devices_identifiers
+            :attached_devices_identifiers, :primary, :provision
     end
 
     def type_name
@@ -116,6 +119,25 @@ module Nic
         primaries = host.interfaces.select { |i| i.primary? && i != self }
         errors.add :primary, _("host already has primary interface") unless primaries.empty?
       end
+    end
+
+    def exclusive_provision_interface
+      if host && self.provision?
+        provisions = host.interfaces.select { |i| i.provision? && i != self }
+        errors.add :primary, _("host already has provision interface") unless provisions.empty?
+      end
+    end
+
+    def require_ip_validation?
+      # if it's not managed there's nowhere to specify an IP anyway
+      return false unless self.provision?
+      # if the CR will provide an IP, then don't validate yet
+      return false if host.compute_provides?(:ip)
+      ip_for_dns     = (subnet.present? && subnet.dns_id.present?) || (domain.present? && domain.dns_id.present?)
+      ip_for_dhcp    = subnet.present? && subnet.dhcp_id.present?
+      ip_for_token   = Setting[:token_duration] == 0 && (host.pxe_build? || (host.image_build? && host.image.try(:user_data?)))
+      # Any of these conditions will require an IP, so chain with OR
+      ip_for_dns or ip_for_dhcp or ip_for_token
     end
 
   end

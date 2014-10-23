@@ -162,6 +162,8 @@ class Host::Managed < Host::Base
     validate :provision_method_in_capabilities
     before_validation :set_compute_attributes, :on => :create
     validate :check_if_provision_method_changed, :on => :update, :if => Proc.new { |host| host.managed }
+
+    validate :managed_host_has_required_interfaces
   end
 
   before_validation :set_hostgroup_defaults, :set_ip_address, :normalize_addresses, :normalize_hostname, :force_lookup_value_matcher
@@ -892,6 +894,7 @@ class Host::Managed < Host::Base
     # TODO move this to Nics
     # self.primary_interface.mac = Net::Validations.normalize_mac(mac)
     # self.primary_interface.ip  = Net::Validations.normalize_ip(ip)
+    # --- I think it's already there, we normalize mac in Nic::Base and IP in Nic::Interface
   end
 
   def force_lookup_value_matcher
@@ -921,6 +924,18 @@ class Host::Managed < Host::Base
 
   def update_lookup_value_fqdn_matchers
     LookupValue.where(:match => "fqdn=#{fqdn_was}").update_all(:match => lookup_value_match)
+  end
+
+  def managed_host_has_required_interfaces
+    if self.managed?
+      check_primary_interface
+    end
+  end
+
+  def check_primary_interface
+    if self.primary_interface.nil?
+      errors.add :interfaces, _("managed host must have one primary interface")
+    end
   end
 
 end
