@@ -134,10 +134,10 @@ class Host::Managed < Host::Base
     include Orchestration
     # Please note that the order of inclusion of DHCP and DNS orchestration modules is important,
     # as DHCP validation code relies on DNS code being run first (but it's being run in the opposite order atm)
-    include Orchestration::DHCP
-    include Orchestration::DNS
+#    include Orchestration::DHCP
+#    include Orchestration::DNS
     include Orchestration::Compute
-    include Orchestration::TFTP
+#    include Orchestration::TFTP
     include Orchestration::Puppetca
     include Orchestration::SSHProvision
     include Orchestration::Realm

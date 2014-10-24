@@ -10,7 +10,7 @@ module Orchestration::TFTP
   end
 
   def tftp?
-    !!(subnet && subnet.tftp?) && (operatingsystem && operatingsystem.pxe_variant) && managed? && pxe_build?
+    provision? && !!(subnet && subnet.tftp?) && (operatingsystem && operatingsystem.pxe_variant) && managed? && pxe_build?
   end
 
   def tftp

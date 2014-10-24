@@ -70,7 +70,7 @@ class MoveHostNicsToInterfaces < ActiveRecord::Migration
       host.domain_id = nic.domain_id
       host.primary_interface = nic.identifier
       host.save!
-      nic.destroy!
+      nic.destroy
     end
 
     remove_column :nics, :primary

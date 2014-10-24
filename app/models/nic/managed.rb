@@ -3,10 +3,13 @@ module Nic
     include Orchestration
     include Orchestration::DHCP
     include Orchestration::DNS
+    include Orchestration::TFTP
+    include Foreman::Renderer
 
     # Interface normally are not executed by them self, so we use the host queue and related methods.
     # this ensures our orchestration works on both a host and a managed interface
     delegate :progress_report_id, :require_ip_validation?, :capabilities, :compute_resource,
+             :operatingsystem, :configTemplate, :jumpstart?, :build, :build?, :os, :arch,
              :image_build?, :pxe_build?, :pxe_build?, :ip_available?, :mac_available?, :to => :host
     delegate :overwrite?, :to => :host, :allow_nil => true
 
@@ -39,6 +42,15 @@ module Nic
 
     def self.humanized_name
       N_('Interface')
+    end
+
+    # Copied from compute orchestraion
+    def ip_available?
+      ip.present? #|| compute_provides?(:ip) TODO revist this for VMs
+    end
+
+    def mac_available?
+      mac.present? #|| compute_provides?(:mac) TODO revist this for VMs
     end
 
     protected
