@@ -187,21 +187,7 @@ module Host
       get_interface_by_flag(:provision)
     end
 
-    def ip
-      self.primary_interface.try(:ip)
-    end
-
-    def mac
-      self.primary_interface.try(:mac)
-    end
-
-    def subnet
-      self.primary_interface.try(:subnet)
-    end
-
-    def domain
-      self.primary_interface.try(:domain)
-    end
+    delegate :ip, :ip=, :mac, :mac=, :subnet, :subnet=, :domain, :domain=, :to => :primary_interface
 
     def managed_interfaces
       self.interfaces.managed.is_managed.all

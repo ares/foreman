@@ -35,6 +35,10 @@ FactoryGirl.define do
     type 'Nic::Bond'
     mode 'balance-rr'
   end
+  factory :nic_primary_and_provision, :parent => :nic_managed, :class => Nic::Managed do
+    primary true
+    provision true
+  end
 
   factory :host do
     sequence(:name) { |n| "host#{n}" }
@@ -136,7 +140,11 @@ FactoryGirl.define do
                      :features => [FactoryGirl.create(:feature, :dhcp)])
         )
       }
-      ip { subnet.network.sub(/0\Z/, '1') }
+      interfaces { [ FactoryGirl.build(:nic_managed,
+                                       :primary => true,
+                                       :provision => true,
+                                       :domain => FactoryGirl.build(:domain),
+                                       :ip => subnet.network.sub(/0\Z/, '1')) ] }
     end
 
     trait :with_dns_orchestration do
@@ -159,7 +167,11 @@ FactoryGirl.define do
                     :features => [FactoryGirl.create(:feature, :dns)])
         )
       }
-      ip { subnet.network.sub(/0\Z/, '1') }
+      interfaces { [ FactoryGirl.build(:nic_managed,
+                                       :primary => true,
+                                       :provision => true,
+                                       :domain => FactoryGirl.build(:domain),
+                                       :ip => subnet.network.sub(/0\Z/, '1')) ] }
     end
 
     trait :with_puppet_orchestration do

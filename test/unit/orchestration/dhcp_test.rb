@@ -2,6 +2,7 @@ require 'test_helper'
 
 class DhcpOrchestrationTest < ActiveSupport::TestCase
   def setup
+    User.current = users(:one)
     disable_orchestration
     SETTINGS[:locations_enabled] = false
     SETTINGS[:organizations_enabled] = false
@@ -10,6 +11,7 @@ class DhcpOrchestrationTest < ActiveSupport::TestCase
   def teardown
     SETTINGS[:locations_enabled] = true
     SETTINGS[:organizations_enabled] = true
+    User.current = nil
   end
 
   test 'host_should_have_dhcp' do
@@ -29,7 +31,7 @@ class DhcpOrchestrationTest < ActiveSupport::TestCase
     end
   end
 
-  def test_bmc_should_have_valid_dhcp_record
+  test 'bmc_should_have_valid_dhcp_record' do
     if unattended?
       h = FactoryGirl.create(:host, :with_dhcp_orchestration)
       b = nics(:bmc)
@@ -43,16 +45,16 @@ class DhcpOrchestrationTest < ActiveSupport::TestCase
 
   test "jumpstart parameter generation" do
     h = FactoryGirl.create(:host, :managed,
-        :ip => '2.3.4.10',
-        :architecture => architectures(:sparc),
-        :operatingsystem => operatingsystems(:solaris10),
-        :subnet => subnets(:one),
-        :domain => domains(:yourdomain),
-        :compute_resource => compute_resources(:one),
-        :model => models(:V210),
-        :medium => media(:solaris10),
-        :puppet_proxy => smart_proxies(:puppetmaster),
-        :ptable => ptables(:one)
+          :interfaces => [ FactoryGirl.build(:nic_primary_and_provision,
+                                             :ip => '2.3.4.10',
+                                             :domain => domains(:yourdomain))  ],
+          :architecture => architectures(:sparc),
+          :operatingsystem => operatingsystems(:solaris10),
+          :compute_resource => compute_resources(:one),
+          :model => models(:V210),
+          :medium => media(:solaris10),
+          :puppet_proxy => smart_proxies(:puppetmaster),
+          :ptable => ptables(:one)
         )
     Resolv::DNS.any_instance.stubs(:getaddress).with("brsla01").returns("2.3.4.5").once
     Resolv::DNS.any_instance.stubs(:getaddress).with("brsla01.yourdomain.net").returns("2.3.4.5").once
