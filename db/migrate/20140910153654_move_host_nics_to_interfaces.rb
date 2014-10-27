@@ -30,10 +30,10 @@ class MoveHostNicsToInterfaces < ActiveRecord::Migration
       nic = FakeNic.new
       nic.host_id = host.id
       nic.name = host.name
-      nic.mac = host.mac
-      nic.ip = host.ip
-      nic.subnet_id = host.subnet.id
-      nic.domain_id = host.domain.id
+      nic.mac = host.attributes.with_indifferent_access[:mac]
+      nic.ip = host.attributes.with_indifferent_access[:ip]
+      nic.subnet_id = host.attributes.with_indifferent_access[:subnet_id]
+      nic.domain_id = host.attributes.with_indifferent_access[:domain_id]
       nic.virtual = false
       nic.identifier = host.primary_interface || "eth0"
       nic.managed = true
