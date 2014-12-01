@@ -13,7 +13,6 @@ class Subnet < ActiveRecord::Base
 
   validates_lengths_from_database :except => [:gateway]
   before_destroy EnsureNotUsedBy.new(:hosts, :hostgroups, :interfaces, :domains)
-  #has_many_hosts
   has_many :hostgroups
   belongs_to :dhcp, :class_name => "SmartProxy"
   belongs_to :tftp, :class_name => "SmartProxy"
