@@ -69,6 +69,7 @@ class Authorizer
     end
 
     return result if all_filters.any?(&:unlimited?)
+    # return resource_class.all if all_filters.any?(&:unlimited?)
 
     search_string = build_scoped_search_condition(all_filters.select(&:limited?))
 
