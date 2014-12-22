@@ -1,7 +1,5 @@
 class ProvisioningTemplate < Template
   include Authorizable
-  extend FriendlyId
-  friendly_id :name
   include Parameterizable::ByIdName
 
   audited :allow_mass_assignment => true

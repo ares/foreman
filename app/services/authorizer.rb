@@ -35,7 +35,8 @@ class Authorizer
                                                             *values]).uniq
     end
 
-    all_filters = all_filters.all # load all records, so #empty? does not call extra COUNT(*) query
+    all_filters = all_filters.to_a # load all records, so #empty? does not call extra COUNT(*) query
+    #return resource_class.where('1=0') if all_filters.empty?
 
     # retrieve hash of scoping data parsed from filters (by scoped_search), e.g. where clauses, joins
     scope_components = build_filtered_scope_components(resource_class, all_filters, options)
