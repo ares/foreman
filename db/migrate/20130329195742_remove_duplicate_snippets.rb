@@ -8,7 +8,7 @@ class RemoveDuplicateSnippets < ActiveRecord::Migration
     FakeConfigTemplate.destroy_all(:name => "HTTP proxy")
 
     # Remove duplicate added by 20120604114049_add_epel_snippets
-    epels = FakeConfigTemplate.all(:conditions => {:name => :epel}, :order => "id ASC")
+    epels = FakeConfigTemplate.where(:name => :epel).order("id ASC").to_a
     epels.shift
     epels.each { |t| t.destroy }
   end
