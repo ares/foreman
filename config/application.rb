@@ -54,7 +54,6 @@ end
 
 module Foreman
   class Application < Rails::Application
-
     def logger
       Rails.logger
     end
