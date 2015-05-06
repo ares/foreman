@@ -24,7 +24,7 @@ class FakeBMCNic < ActiveRecord::Base
   end
 
   def type
-    Nic::Base
+    Nic::BMC
   end
 end
 
@@ -35,7 +35,8 @@ class ExtractNicAttributes < ActiveRecord::Migration
     add_column :nics, :password, :string
 
     say "Extracting serialized attributes"
-    FakeBMCNic.all.each do |nic|
+    Nic::BMC.all.each do |nic|
+      nic = nic.becomes(FakeBMCNic)
       if nic.attrs.present?
         nic.attrs.each_pair do |attribute, value|
           if nic.respond_to?(attribute)
@@ -44,17 +45,20 @@ class ExtractNicAttributes < ActiveRecord::Migration
             raise Foreman::Exception, "can not extract attribute '#{attribute}', delete custom interface and rerun migration"
           end
         end
+        nic.type = 'Nic::BMC'
         nic.save(:validate => false)
       end
     end
   end
 
   def down
-    FakeBMCNic.all.each do |nic|
+    Nic::BMC.all.each do |nic|
+      nic = nic.becomes(FakeBMCNic)
       nic.attrs['provider'] = nic.provider unless nic.provider.nil?
       nic.attrs['username'] = nic.username unless nic.username.nil?
       nic.attrs['password'] = nic.password unless nic.password.nil?
-      nic.save!
+      nic.type = 'Nic::BMC'
+      nic.save(:validate => false)
     end
 
     remove_column :nics, :password
