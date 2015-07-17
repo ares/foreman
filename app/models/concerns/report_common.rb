@@ -1,19 +1,14 @@
 module ReportCommon
+  # TODO: this concern is now used inly in report.rb and can be moved there completely
+
+  # TODO: defining the constants at two places is not very nice. Report should be changed to
+  # use values from ConfigurationStatus, or possibly the constants could be moved to ReprotStatusCalculator
   METRIC = %w[applied restarted failed failed_restarts skipped pending]
   BIT_NUM = 6
   MAX = (1 << BIT_NUM) -1 # maximum value per metric
   LOG_LEVELS = %w[debug info notice warning err alert emerg crit]
 
   extend ActiveSupport::Concern
-
-  included do
-    # search for a metric - e.g.:
-    # Report.with("failed") --> all reports which have a failed counter > 0
-    # Report.with("failed",20) --> all reports which have a failed counter > 20
-    scope :with, lambda { |*arg| {
-      :conditions => "(#{report_status} >> #{BIT_NUM*METRIC.index(arg[0])} & #{MAX}) > #{arg[1] || 0}"}
-    }
-  end
 
   # generate dynamically methods for all metrics
   # e.g. Report.last.applied
@@ -45,4 +40,5 @@ module ReportCommon
     @calc ||= ReportStatusCalculator.new(:bit_field => read_attribute(self.class.report_status))
     @calc.status(type)
   end
+
 end

@@ -20,6 +20,8 @@ class ReportStatusCalculator
   #returns metrics
   #when no metric type is specific returns hash with all values
   #passing a METRIC member will return its value
+  #TODO: refactor and make the metric type parameter required
+  #move the logic for getting full hash of metrics into a separate method
   def status(type = nil)
     calculate if raw_status == 0
     raise(Foreman::Exception(N_("invalid type %s") % type)) if type && !Report::METRIC.include?(type)

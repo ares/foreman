@@ -1,6 +1,7 @@
 class Report < ActiveRecord::Base
   include Authorizable
   include ReportCommon
+  include ConfigurationStatusScopedSearch
 
   validates_lengths_from_database
   belongs_to_host
@@ -24,12 +25,19 @@ class Report < ActiveRecord::Base
   scoped_search :on => :reported_at, :complete_value => true, :default_order => :desc,    :rename => :reported, :only_explicit => true
   scoped_search :on => :status, :offset => 0, :word_size => 4*BIT_NUM, :complete_value => {:true => true, :false => false}, :rename => :eventful
 
-  scoped_search :on => :status, :offset => METRIC.index("applied"),         :word_size => BIT_NUM, :rename => :applied
-  scoped_search :on => :status, :offset => METRIC.index("restarted"),       :word_size => BIT_NUM, :rename => :restarted
-  scoped_search :on => :status, :offset => METRIC.index("failed"),          :word_size => BIT_NUM, :rename => :failed
-  scoped_search :on => :status, :offset => METRIC.index("failed_restarts"), :word_size => BIT_NUM, :rename => :failed_restarts
-  scoped_search :on => :status, :offset => METRIC.index("skipped"),         :word_size => BIT_NUM, :rename => :skipped
-  scoped_search :on => :status, :offset => METRIC.index("pending"),         :word_size => BIT_NUM, :rename => :pending
+  scoped_search_status 'applied',         :on => :status, :rename => :applied
+  scoped_search_status 'restarted',       :on => :status, :rename => :restarted
+  scoped_search_status 'failed',          :on => :status, :rename => :failed
+  scoped_search_status 'failed_restarts', :on => :status, :rename => :failed_restarts
+  scoped_search_status 'skipped',         :on => :status, :rename => :skipped
+  scoped_search_status 'pending',         :on => :status, :rename => :pending
+
+  # search for a metric - e.g.:
+  # Report.with("failed") --> all reports which have a failed counter > 0
+  # Report.with("failed",20) --> all reports which have a failed counter > 20
+  scope :with, lambda { |*arg|
+    where("(#{report_status} >> #{HostStatus::ConfigurationStatus.bit_mask(arg[0].to_s)}) > #{arg[1] || 0}")
+  }
 
   # returns reports for hosts in the User's filter set
   scope :my_reports, lambda {
@@ -51,6 +59,8 @@ class Report < ActiveRecord::Base
           when Integer, Fixnum
             st
           when Hash
+            #TODO: it would be very nice to refactor this behaviour and ensure the status setter
+            #always gets integer number from the importer
             ReportStatusCalculator.new(:counters => st).calculate
           else
             raise Foreman::Exception(N_('Unsupported report status format'))

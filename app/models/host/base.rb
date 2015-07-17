@@ -23,6 +23,7 @@ module Host
             :conditions => { :provision => true }
     has_one :domain, :through => :primary_interface
     has_one :subnet, :through => :primary_interface
+    has_many :host_statuses, :class_name => 'HostStatus::Base', :foreign_key => 'host_id'
     accepts_nested_attributes_for :interfaces, :allow_destroy => true
 
     belongs_to :location

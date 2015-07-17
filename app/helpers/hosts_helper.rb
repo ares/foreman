@@ -72,44 +72,28 @@ module HostsHelper
   end
 
   # method that reformat the hostname column by adding the status icons
-  def name_column(record)
-    label = record.host_status
-    case label
-    when "Pending Installation"
-      style ="label-info"
-      # TRANSLATORS: host's status: first character of "build"
-      short = s_("Build|B")
-    when "Alerts disabled"
-      style = "label-default"
-      # TRANSLATORS: host's status: first character of "disabled"
-      short = s_("Disabled|D")
-    when "No reports"
-      style = "label-default"
-      # TRANSLATORS: host's status: first character of "no reports"
-      short = s_("No reports|N")
-    when "Out of sync"
-      style = "label-warning"
-      # TRANSLATORS: host's status: first character of "sync" (out of sync)
-      short = s_("Sync|S")
-    when "Error"
-      style = "label-danger"
-      # TRANSLATORS: host's status: first character of "error"
-      short = s_("Error|E")
-    when "Active"
-      style = "label-info"
-      # TRANSLATORS: host's status: first character of "active"
-      short = s_("Active|A")
-    when "Pending"
-      style = "label-warning"
-      # TRANSLATORS: host's status: first character of "pending"
-      short = s_("Pending|P")
+  def name_column(host)
+    # TODO: add colors to the status icons
+    case host.global_status
+    when HostStatus::Global::OK
+      style = 'glyphicon glyphicon-ok-sign'
+    when HostStatus::Global::WARN
+      style = 'glyphicon glyphicon-info-sign'
+    when HostStatus::Global::ERROR
+      style = 'glyphicon glyphicon-exclamation-sign'
     else
-      style = "label-success"
-      # TRANSLATORS: host's status: first character of "OK"
-      short = s_("OK|O")
+      style = 'glyphicon glyphicon-question-sign'
     end
-    content_tag(:span, short, {:rel => "twipsy", :class => "label label-light " + style, :"data-original-title" => _(label)} ) +
-      link_to(trunc_with_tooltip("  #{record}"), host_path(record))
+
+    # TODO: add better formatting, we might need to tune the tooltip setup to allow html elements inside
+    tooltip = ""
+    host.host_statuses.each do |status|
+      tooltip += "#{_(status.name)}: #{_(status.to_label)}; "
+    end
+
+    content = content_tag(:span, "", {:rel => "twipsy", :class => style, :"data-original-title" => tooltip} )
+    content += link_to(trunc_with_tooltip("  #{host}"), host_path(host))
+    content
   end
 
   def days_ago(time)

@@ -70,26 +70,56 @@ class Host::Managed < Host::Base
 
   scope :with_os, lambda { where('hosts.operatingsystem_id IS NOT NULL') }
 
-  scope :with_error, lambda { where("(puppet_status > 0) and
-   ( ((puppet_status >> #{BIT_NUM*METRIC.index("failed")} & #{MAX}) != 0) or
-    ((puppet_status >> #{BIT_NUM*METRIC.index("failed_restarts")} & #{MAX}) != 0) )")
+  scope :with_status, lambda { |status_type|
+    includes(:host_statuses).where("host_status.type = '#{status_type}'")
   }
 
-  scope :without_error, lambda { where("((puppet_status >> #{BIT_NUM*METRIC.index("failed")} & #{MAX}) = 0) and
-     ((puppet_status >> #{BIT_NUM*METRIC.index("failed_restarts")} & #{MAX}) = 0)")
+  scope :with_config_status, lambda {
+    with_status('HostStatus::ConfigurationStatus')
   }
 
-  scope :with_changes, lambda { where("(puppet_status > 0) and
-    ( ((puppet_status >> #{BIT_NUM*METRIC.index("applied")} & #{MAX}) != 0) or
-    ((puppet_status >> #{BIT_NUM*METRIC.index("restarted")} & #{MAX}) != 0) )")
+  # search for a metric - e.g.:
+  # Host::Managed.with("failed") --> all reports which have a failed counter > 0
+  # Host::Managed.with("failed",20) --> all reports which have a failed counter > 20
+  scope :with, lambda { |*arg|
+    with_config_status.where("(host_status.status >> #{HostStatus::ConfigurationStatus.bit_mask(arg[0].to_s)}) > #{arg[1] || 0}")
   }
 
-  scope :without_changes, lambda { where("((puppet_status >> #{BIT_NUM*METRIC.index("applied")} & #{MAX}) = 0) and
-     ((puppet_status >> #{BIT_NUM*METRIC.index("restarted")} & #{MAX}) = 0)")
+  scope :with_error, lambda {
+    with_config_status.where("(host_status.status > 0) and (
+      #{HostStatus::ConfigurationStatus.is('failed')} or
+      #{HostStatus::ConfigurationStatus.is('failed_restarts')}
+    )")
   }
 
-  scope :with_pending_changes, lambda { where("(puppet_status > 0) and ((puppet_status >> #{BIT_NUM*METRIC.index("pending")} & #{MAX}) != 0)") }
-  scope :without_pending_changes, lambda { where("((puppet_status >> #{BIT_NUM*METRIC.index("pending")} & #{MAX}) = 0)") }
+  scope :without_error, lambda {
+    with_config_status.where("
+      #{HostStatus::ConfigurationStatus.is_not('failed')} and
+      #{HostStatus::ConfigurationStatus.is_not('failed_restarts')}
+    ")
+  }
+
+  scope :with_changes, lambda {
+    with_config_status.where("(host_status.status > 0) and (
+      #{HostStatus::ConfigurationStatus.is('applied')} or
+      #{HostStatus::ConfigurationStatus.is('restarted')}
+    )")
+  }
+
+  scope :without_changes, lambda {
+    with_config_status.where("
+      #{HostStatus::ConfigurationStatus.is_not('applied')} and
+      #{HostStatus::ConfigurationStatus.is_not('restarted')}
+    ")
+  }
+
+  scope :with_pending_changes, lambda {
+    with_config_status.where("(host_status.status > 0) and (#{HostStatus::ConfigurationStatus.is('pending')})")
+  }
+
+  scope :without_pending_changes, lambda {
+    with_config_status.where("#{HostStatus::ConfigurationStatus.is_not('pending')}")
+  }
 
   scope :successful, lambda { without_changes.without_error.without_pending_changes}
 
@@ -672,6 +702,7 @@ class Host::Managed < Host::Base
     compute_resource ? compute_resource.vm_compute_attributes_for(uuid) : nil
   end
 
+  #TODO: remove, it's replaced with HostStatus::ConfigurationStatus#to_label
   def host_status
     if build
       N_("Pending Installation")
@@ -794,6 +825,7 @@ class Host::Managed < Host::Base
   end
 
   def build_status
+    # TODO: rename to avoid conflict with host statuses
     build_status = HostBuildStatus.new(self)
     build_status.check_all_statuses
     build_status
@@ -804,6 +836,29 @@ class Host::Managed < Host::Base
   def setup_clone
     return if new_record?
     @old = super { |clone| clone.interfaces = self.interfaces.map {|i| setup_object_clone(i) } }
+  end
+
+  def refresh_global_status
+    @global_status = HostStatus::Global.build(host_statuses)
+  end
+
+  def refresh_statuses
+    HostStatus.status_registry.each do |status_class|
+      status = get_status(status_class.to_s)
+      status.refresh! unless status.nil?
+    end
+    host_statuses.reload
+    refresh_global_status
+  end
+
+  def get_status(type)
+    status = host_statuses.find_by_type(type)
+    if status.nil?
+      status_class = type.constantize
+      status = status_class.create(:host => self, :reported_at => Time.now) if status_class.relevant_for_host?(self)
+    else
+      status
+    end
   end
 
   private
@@ -863,13 +918,9 @@ class Host::Managed < Host::Base
   end
 
   # alias to ensure same method that resolves the last report between the hosts and reports tables.
+  #TODO: remove? It's probably not needed anymore since ReportCommon is no longer included into HostManaged
   def reported_at
     last_report
-  end
-
-  # puppet report status table column name
-  def self.report_status
-    "puppet_status"
   end
 
   # converts a name into ip address using DNS.
