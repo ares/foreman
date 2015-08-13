@@ -1,0 +1,7 @@
+<%= render 'nic/base_form', :f => f %>
+
+<%= content_tag :span, :class => 'bridge_fields' do %>
+  <%= text_f f, :attached_devices, :help_inline => _('comma separated interface identifiers'), :class => 'attached' %>
+<% end %>
+
+<%= render 'nic/provider_specific_form', :f => f %>
