@@ -18,8 +18,7 @@
 class RolesController < ApplicationController
   include Foreman::Controller::AutoCompleteSearch
   include Foreman::Controller::Parameters::Role
-
-  before_action :find_resource, :only => [:clone, :edit, :update, :destroy]
+  before_action :find_resource, :only => [ :clone, :edit, :update, :destroy, :reset_filter_taxonomies ]
 
   def index
     params[:order] ||= 'name'
@@ -34,6 +33,7 @@ class RolesController < ApplicationController
     @role = role_from_form
 
     if @role.save
+      @role.set_taxonomies(taxonomy_params!) if cloning?
       process_success
     else
       process_error
@@ -52,6 +52,8 @@ class RolesController < ApplicationController
   end
 
   def update
+    @role.set_taxonomies(taxonomy_params!)
+
     if @role.update_attributes(role_params)
       process_success
     else
@@ -67,19 +69,26 @@ class RolesController < ApplicationController
     end
   end
 
+  def reset_filter_taxonomies
+    @role.set_filter_taxonomies
+    process_success :success_msg => _('Filters organizations and locations has been synchronized')
+  end
+
   private
 
   def action_permission
     case params[:action]
       when 'clone'
         'view'
+      when 'reset_filter_taxonomies'
+        'edit'
       else
         super
     end
   end
 
   def role_from_form
-    if params[:original_role_id].present?
+    if cloning?
       new_role = Role.find(params[:original_role_id]).
                    deep_clone(:include => [:filters => :filterings])
       new_role.name    = params[:role][:name]
@@ -89,5 +98,9 @@ class RolesController < ApplicationController
     end
 
     new_role
+  end
+
+  def cloning?
+    params[:original_role_id].present?
   end
 end

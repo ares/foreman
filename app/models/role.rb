@@ -47,6 +47,15 @@ class Role < ActiveRecord::Base
 
   has_many :permissions, :through => :filters
 
+  # these associations are not used by Taxonomix but serve as a pattern for role filters
+  # we intentionally don't include Taxonomix since roles are not taxable, we only need these relations
+  taxonomy_join_table = :taxable_taxonomies
+  has_many taxonomy_join_table.to_sym, :dependent => :destroy, :as => :taxable
+  has_many :locations, -> { where(:type => 'Location') },
+           :through => taxonomy_join_table, :source => :taxonomy
+  has_many :organizations, -> { where(:type => 'Organization') },
+           :through => taxonomy_join_table, :source => :taxonomy
+
   validates :name, :presence => true, :uniqueness => true
   validates :builtin, :inclusion => { :in => 0..2 }
 
@@ -129,7 +138,39 @@ class Role < ActiveRecord::Base
     save!
   end
 
-private
+  def set_taxonomies(user_selected_ids)
+    user_selected_ids = user_selected_ids.reject(&:blank?).map(&:to_i)
+    existing_taxonomies = existing_taxonomy_ids
+    user_can_set = User.current.my_taxonomies_ids
+
+    if (existing_taxonomies & user_can_set).sort! != user_selected_ids.sort!
+      # we want to keep associations that user can't modify
+      taxonomies_to_add = (existing_taxonomies - user_can_set) + (user_selected_ids & user_can_set)
+      self.organization_ids = Organization.where(:id => taxonomies_to_add).pluck(:id) if Taxonomy.organizations_enabled
+      self.location_ids = Location.where(:id => taxonomies_to_add).pluck(:id) if Taxonomy.locations_enabled
+
+      # update all filters with taxonomies_to_add too
+      sync_filter_taxonomies(user_selected_ids, user_can_set)
+    end
+  end
+
+  def set_filter_taxonomies
+    sync_filter_taxonomies(existing_taxonomy_ids, User.current.my_taxonomies_ids)
+  end
+
+  def filters_out_of_sync?
+    self.filters.includes(:taxable_taxonomies).any? { |filter| filter.taxonomies_out_of_sync? }
+  end
+
+  def filters_out_of_sync
+    self.filters.includes(:taxable_taxonomies).select { |filter| filter.taxonomies_out_of_sync? }
+  end
+
+  def existing_taxonomy_ids
+    self.taxable_taxonomies.pluck(:taxonomy_id)
+  end
+
+  private
 
   def allowed_permissions
     @allowed_permissions ||= permission_names + Foreman::AccessControl.public_permissions.map(&:name)
@@ -143,5 +184,12 @@ private
     errors.add(:base, _("Role is in use")) if users.any?
     errors.add(:base, _("Can't delete built-in role")) if builtin?
     errors.empty?
+  end
+
+  # this can generate a lot of queries but it's triggered only when role association changes or asked for
+  def sync_filter_taxonomies(selected, user_can_set)
+    self.filters.includes(:taxable_taxonomies).each do |filter|
+      filter.set_taxonomies(selected, user_can_set)
+    end
   end
 end

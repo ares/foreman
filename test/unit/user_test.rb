@@ -547,6 +547,27 @@ class UserTest < ActiveSupport::TestCase
     end
   end
 
+  test "#my_taxonomies_ids return ids including nesting for user" do
+    user = FactoryGirl.create(:user)
+    org1 = FactoryGirl.create(:organization)
+    org2 = FactoryGirl.create(:organization, :parent => org1)
+    user.organizations << org1
+
+    assert_includes user.my_taxonomies_ids, org1.id
+    assert_includes user.my_taxonomies_ids, org2.id
+  end
+
+  test "#my_taxonomies_ids return ids of all taxonomies for admin user" do
+    user = FactoryGirl.create(:user, :admin)
+    org1 = FactoryGirl.create(:organization)
+    org2 = FactoryGirl.create(:organization, :parent => org1)
+    loc1 = FactoryGirl.create(:location)
+
+    assert_includes user.my_taxonomies_ids, org1.id
+    assert_includes user.my_taxonomies_ids, org2.id
+    assert_includes user.my_taxonomies_ids, loc1.id
+  end
+
   context "find_or_create_external_user" do
     context "internal or not existing AuthSource" do
       test 'existing user' do

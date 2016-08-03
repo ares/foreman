@@ -36,4 +36,12 @@ module FiltersHelper
       send(path) if respond_to?(path)
     end
   end
+
+  def filter_status(filter)
+    if filter.taxonomies_out_of_sync?
+      content_tag :i, '', :class => 'pficon-info status-warn', :title => _('This filter is out of sync with role organizations or locations').html_safe
+    else
+      ''
+    end
+  end
 end

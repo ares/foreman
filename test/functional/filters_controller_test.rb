@@ -68,4 +68,22 @@ class FiltersControllerTest < ActionController::TestCase
 
     assert_select "table[data-table='inline']"
   end
+
+  test 'should reset filter taxonomies' do
+    permission1 = FactoryGirl.create(:permission, :domain, :name => 'permission1')
+    role = FactoryGirl.build(:role, :permissions => [])
+    role.add_permissions! [permission1.name]
+    org1 = FactoryGirl.create(:organization)
+    org2 = FactoryGirl.create(:organization)
+    role.organizations = [ org1 ]
+    role.filters.reload
+    filter_with_org = role.filters.detect { |f| f.allows_organization_filtering? }
+    filter_with_org.organizations = [ org1, org2 ]
+
+    patch :reset_filter_taxonomies, { :role_id => role.id, :id => filter_with_org.id }, set_session_user
+
+    assert_response :redirect
+    filter_with_org.reload
+    assert_equal [ org1 ], filter_with_org.organizations
+  end
 end

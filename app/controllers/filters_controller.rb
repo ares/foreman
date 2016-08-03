@@ -46,7 +46,22 @@ class FiltersController < ApplicationController
     end
   end
 
-  protected
+  def reset_filter_taxonomies
+    @filter = resource_base.find(params[:id])
+    @filter.set_taxonomies(@role.existing_taxonomy_ids)
+    process_success :success_msg => _('Filter organizations and locations has been synchronized with it\'s role')
+  end
+
+  private
+
+  def action_permission
+    case params[:action]
+      when 'reset_filter_taxonomies'
+        'edit'
+      else
+        super
+    end
+  end
 
   def find_role
     @role = Role.find_by_id(role_id)

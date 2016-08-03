@@ -380,6 +380,10 @@ class User < ActiveRecord::Base
     taxonomy_and_child_ids(:organizations)
   end
 
+  def my_taxonomies_ids
+    Organization.my_organizations.pluck(:id) + Location.my_locations.pluck(:id)
+  end
+
   def self.random_password(size = 16)
     set = ('a'..'z').to_a + ('A'..'Z').to_a + ('0'..'9').to_a - %w(0 1 O I l)
     size.times.collect {|i| set[rand(set.size)] }.join

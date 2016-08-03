@@ -42,6 +42,20 @@ class RolesControllerTest < ActionController::TestCase
     assert_equal 'masterManager', role.name
   end
 
+  test 'update syncs filters taxonomies if configuration changed' do
+    permission1 = FactoryGirl.create(:permission, :domain, :name => 'permission1')
+    role = FactoryGirl.build(:role, :permissions => [])
+    role.add_permissions! [permission1.name]
+    org1 = FactoryGirl.create(:organization)
+    org2 = FactoryGirl.create(:organization)
+    role.organizations = [ org1 ]
+
+    put :update, { :id => role.id, :role => { :organization_ids => ['', org2.id.to_s, ''] } }, set_session_user
+    assert_response :redirect
+    filter = role.filters.first
+    assert_equal [ org2 ], filter.organizations.all
+  end
+
   test 'delete destroy removes role' do
     role = FactoryGirl.build(:role, :name => 'ToBeDestroyed')
     role.add_permissions! :view_ptables
@@ -57,6 +71,24 @@ class RolesControllerTest < ActionController::TestCase
     assert_redirected_to roles_path
     assert_equal 'Role is in use', flash[:error]
     assert_not_nil Role.find_by_id(roles(:manager).id)
+  end
+
+  test 'should reset filter taxonomies' do
+    permission1 = FactoryGirl.create(:permission, :domain, :name => 'permission1')
+    role = FactoryGirl.build(:role, :permissions => [])
+    role.add_permissions! [ permission1.name ]
+    org1 = FactoryGirl.create(:organization)
+    org2 = FactoryGirl.create(:organization)
+    role.organizations = [ org1 ]
+    role.filters.reload
+    filter_with_org = role.filters.detect { |f| f.allows_organization_filtering? }
+    filter_with_org.organizations = [ org1, org2 ]
+
+    patch :reset_filter_taxonomies, { :id => role.id }, set_session_user
+
+    assert_response :redirect
+    filter_with_org.reload
+    assert_equal [ org1 ], filter_with_org.organizations
   end
 
   context 'clone' do
@@ -80,6 +112,24 @@ class RolesControllerTest < ActionController::TestCase
       cloned_role = Role.find_by_name('clonedrole')
       assert_not_nil cloned_role
       assert_equal @role.permissions, cloned_role.permissions
+    end
+
+    test 'sets new taxonomies to filters after cloning properly' do
+      permission1 = FactoryGirl.create(:permission, :domain, :name => 'permission1')
+      role = FactoryGirl.build(:role, :permissions => [])
+      role.add_permissions! [permission1.name]
+      org1 = FactoryGirl.create(:organization)
+      org2 = FactoryGirl.create(:organization)
+      role.organizations = [ org1 ]
+
+      params = { :role => { :name => 'clonedrole', :organization_ids => ['', org2.id.to_s, ''] },
+                 :original_role_id => role.id,
+                 :cloned_role => true }
+      post :create, params, set_session_user
+
+      assert_response :redirect
+      filter = Role.find_by_name('clonedrole').filters.first
+      assert_equal [ org2 ], filter.organizations.all
     end
   end
 end

@@ -23,6 +23,7 @@ module Api
       def_param_group :role do
         param :role, Hash, :required => true, :action_aware => true do
           param :name, String, :required => true
+          param_group :taxonomies
         end
       end
 
@@ -39,7 +40,10 @@ module Api
       param_group :role
 
       def update
-        process_response @role.update_attributes(role_params)
+        taxonomies = taxonomy_params!
+        result = @role.update_attributes(role_params)
+        @role.set_taxonomies(taxonomies)
+        process_response result
       end
 
       api :DELETE, "/roles/:id/", N_("Delete a role")
