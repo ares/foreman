@@ -133,3 +133,13 @@ twentysix:
   taxonomy: organization2
   taxable: Location 2
   taxable_type: Taxonomy
+
+restricted_user_organization1:
+  taxonomy: organization1
+  taxable: restricted
+  taxable_type: User
+
+restricted_user_location1:
+  taxonomy: location1
+  taxable: restricted
+  taxable_type: User

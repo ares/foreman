@@ -134,7 +134,7 @@ class LocationTest < ActiveSupport::TestCase
     assert_equal selected_ids[:subnet_ids], [subnets(:one).id]
     assert_equal selected_ids[:domain_ids].sort, [domains(:mydomain).id, domains(:yourdomain).id].sort
     assert_equal selected_ids[:medium_ids], [media(:one).id]
-    assert_equal selected_ids[:user_ids], []
+    assert_equal selected_ids[:user_ids], [users(:restricted).id]
     assert_equal selected_ids[:smart_proxy_ids].sort, [smart_proxies(:puppetmaster).id, smart_proxies(:one).id, smart_proxies(:two).id, smart_proxies(:three).id, smart_proxies(:realm).id].sort
     assert_equal selected_ids[:provisioning_template_ids], [templates(:mystring2).id]
     assert_equal selected_ids[:compute_resource_ids], [compute_resources(:one).id]
@@ -360,6 +360,13 @@ class LocationTest < ActiveSupport::TestCase
   test ".my_locations returns all locations for admin" do
     as_admin do
       assert_equal Location.unscoped.pluck(:id).sort, Location.my_locations.pluck(:id).sort
+    end
+  end
+
+  test ".my_locations optionally accepts user as argument" do
+    expected = Location.where(:id => users(:one).location_and_child_ids)
+    as_admin do
+      assert_equal expected.sort, Location.my_locations(users(:one)).pluck(:id).sort
     end
   end
 
