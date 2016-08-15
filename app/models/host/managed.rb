@@ -161,8 +161,9 @@ class Host::Managed < Host::Base
   alias_attribute :arch, :architecture
 
   validates :environment_id, :presence => true, :unless => Proc.new { |host| host.puppet_proxy_id.blank? }
-  validates :organization_id, :presence => true, :if => Proc.new {|host| host.managed? && SETTINGS[:organizations_enabled] }
-  validates :location_id,     :presence => true, :if => Proc.new {|host| host.managed? && SETTINGS[:locations_enabled] }
+  validates :organization_id, :presence => true, :if => Proc.new { |host| host.managed? && SETTINGS[:organizations_enabled] }
+  validates :location_id,     :presence => true, :if => Proc.new { |host| host.managed? && SETTINGS[:locations_enabled] }
+  validate :owner_taxonomies_match, :if => Proc.new { |host| host.owner.is_a?(User) }
 
   if SETTINGS[:unattended]
     # handles all orchestration of smart proxies.
@@ -208,8 +209,8 @@ class Host::Managed < Host::Base
     end
   end
 
-  before_validation :set_hostgroup_defaults, :set_ip_address
-  after_validation :ensure_associations, :set_default_user
+  before_validation :set_hostgroup_defaults, :set_ip_address, :set_default_user
+  after_validation :ensure_associations
   before_validation :set_certname, :if => Proc.new {|h| h.managed? && Setting[:use_uuid_for_certificates] } if SETTINGS[:unattended]
   after_validation :trigger_nic_orchestration, :if => Proc.new { |h| h.managed? && h.changed? }, :on => :update
   before_validation :validate_dns_name_uniqueness
@@ -912,6 +913,15 @@ class Host::Managed < Host::Base
 
   private
 
+  def owner_taxonomies_match
+    if Organization.organizations_enabled && self.organization_id && !self.owner.my_organizations.where(:id => self.organization_id).exists?
+      errors.add :is_owned_by, _("does not belong into host's organization")
+    end
+    if Location.locations_enabled && self.location_id && !self.owner.my_locations.where(:id => self.location_id).exists?
+      errors.add :is_owned_by, _("does not belong into host's location")
+    end
+  end
+
   def compute_profile_present?
     !(compute_profile_id.nil? || compute_resource_id.nil?)
   end
@@ -975,9 +985,8 @@ class Host::Managed < Host::Base
   end
 
   def set_default_user
-    return if self.owner_type.present? && !OWNER_TYPES.include?(self.owner_type)
-    self.owner_type ||= 'User'
-    self.owner ||= User.current
+    self.owner ||= User.current if self.owner_type.nil? && self.owner_id.nil?
+    true
   end
 
   def set_certname

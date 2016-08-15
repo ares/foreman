@@ -31,7 +31,6 @@ module Host
     alias_attribute :hostname, :name
     validates :name, :presence   => true, :uniqueness => true, :format => {:with => Net::Validations::HOST_REGEXP}
     validates :owner_type, :inclusion => { :in          => OWNER_TYPES,
-                                           :allow_blank => true,
                                            :message     => (_("Owner type needs to be one of the following: %s") % OWNER_TYPES.join(', ')) }
     validate :validate_owner
     validate :host_has_required_interfaces
