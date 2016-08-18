@@ -35,6 +35,10 @@ class RolesController < ApplicationController
     if @role.save
       process_success
     else
+      if cloning?
+        @cloned_role = true
+        @original_role_id = params[:original_role_id]
+      end
       process_error
     end
   end
@@ -42,7 +46,6 @@ class RolesController < ApplicationController
   def clone
     @cloned_role      = true
     @original_role_id = @role.id
-    notice(_("Role cloned from role %{old_name}") % { :old_name => @role.name })
     @role = Role.new
     render :action => :new
   end

@@ -20,23 +20,23 @@ search.catcomplete({source: function( request, response ) {
 <% end %>
 
 <% if @show_organizations %>
-  $('li a[href="#organizations"]').toggle(!$('#inheriting_taxonomy_checkbox').prop('checked'));
+  $('li a[href="#organizations"]').toggle($('#override_taxonomy_checkbox').prop('checked'));
 <% else %>
   $('li a[href="#organizations"]').hide();
 <% end %>
 $('#filter_resource_type').attr('data-allow-organizations', <%= !!@show_organizations %>);
 
 <% if @show_locations %>
-  $('li a[href="#locations"]').toggle(!$('#inheriting_taxonomy_checkbox').prop('checked'));
+  $('li a[href="#locations"]').toggle($('#override_taxonomy_checkbox').prop('checked'));
 <% else %>
   $('li a[href="#locations"]').hide();
 <% end %>
 $('#filter_resource_type').attr('data-allow-locations', <%= !!@show_locations %>);
 
 <% if @show_organizations || @show_locations %>
-  $('#inheriting_taxonomy_form').show();
-$('#inheriting_taxonomy_checkbox').prop('disabled', false);
+  $('#override_taxonomy_form').show();
+$('#override_taxonomy_checkbox').prop('disabled', false);
 <% else %>
-  $('#inheriting_taxonomy_form').hide();
-  $('#inheriting_taxonomy_checkbox').prop('disabled', true);
+  $('#override_taxonomy_form').hide();
+  $('#override_taxonomy_checkbox').prop('disabled', true);
 <% end %>

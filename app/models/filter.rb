@@ -46,7 +46,7 @@ class Filter < ActiveRecord::Base
   scope :limited, -> { where("search IS NOT NULL OR taxonomy_search IS NOT NULL") }
 
   scoped_search :on => :search, :complete_value => true
-  scoped_search :on => :inheriting, :complete_value => { :true => true, :false => false }
+  scoped_search :on => :override, :complete_value => { :true => true, :false => false }
   scoped_search :on => :limited, :complete_value => { :true => true, :false => false }, :ext_method => :search_by_limited, :only_explicit => true
   scoped_search :on => :unlimited, :complete_value => { :true => true, :false => false }, :ext_method => :search_by_unlimited, :only_explicit => true
   scoped_search :in => :role, :on => :id, :rename => :role_id, :complete_enabled => false, :only_explicit => true
@@ -54,7 +54,7 @@ class Filter < ActiveRecord::Base
   scoped_search :in => :permissions, :on => :resource_type, :rename => :resource
   scoped_search :in => :permissions, :on => :name,          :rename => :permission
 
-  before_validation :build_taxonomy_search, :nilify_empty_searches, :enforce_inheriting_flag
+  before_validation :build_taxonomy_search, :nilify_empty_searches, :enforce_override_flag
   before_save :inherit_taxonomies
 
   validates :search, :presence => true, :unless => Proc.new { |o| o.search.nil? }
@@ -159,7 +159,7 @@ class Filter < ActiveRecord::Base
   end
 
   def inherit_taxonomies
-    if self.inheriting?
+    unless self.override?
       inherit_taxonomies!
     end
   end
@@ -229,7 +229,8 @@ class Filter < ActiveRecord::Base
     end
   end
 
-  def enforce_inheriting_flag
-    self.inheriting = true unless self.allows_taxonomies_filtering?
+  def enforce_override_flag
+    self.override = false unless self.allows_taxonomies_filtering?
+    true
   end
 end

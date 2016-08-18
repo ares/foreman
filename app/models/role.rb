@@ -174,7 +174,7 @@ class Role < ActiveRecord::Base
   private
 
   def sync_inheriting_filters
-    self.filters.where(:inheriting => true).each { |f| f.inherit_taxonomies! }
+    self.filters.where(:override => false).each { |f| f.inherit_taxonomies! }
   end
 
   def allowed_permissions

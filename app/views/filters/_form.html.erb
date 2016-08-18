@@ -42,15 +42,15 @@
           </span>
       </div>
 
-      <div id="inheriting_taxonomy_form" class="<%= f.object.allows_taxonomies_filtering? ? '' : 'hidden' %>">
-        <%= checkbox_f f, :inheriting?,
-                       :help_inline => _("Filters inherit organizations and locations from their role by default. If this is unchecked a different set of organizations and locations can be associated to this filter."),
-                       :id => 'inheriting_taxonomy_checkbox' %>
+      <div id="override_taxonomy_form" class="<%= f.object.allows_taxonomies_filtering? ? '' : 'hidden' %>">
+        <%= checkbox_f f, :override?,
+                       :help_inline => _("Filters inherit organizations and locations from their role by default. If this is checked, filter can override set of its organizations and locations."),
+                       :id => 'override_taxonomy_checkbox' %>
       </div>
 
       <div id="granular_form" style="<%= f.object.granular? ? '' : 'display:none' %>">
         <%= checkbox_f f, :unlimited?,
-                       :help_inline => _("By unchecking this you can specify filter using Foreman search syntax in search field. If filter remains unlimited (this field is checked) it applies on all resources of the selected type") %>
+                       :help_inline => _("By unchecking this you can specify filter using Foreman search syntax in search field. If filter remains unlimited (this field is checked) it applies on all resources of the selected type. When role is associated with some organizations or locations filter is not considered unlimited as it's scoped accordingly.") %>
 
 
         <%= autocomplete_f f, :search,

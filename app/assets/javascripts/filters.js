@@ -13,10 +13,10 @@ $(document).ready(function () {
     $('#search').prop('disabled', $(this).prop('checked'));
   });
 
-  $('#inheriting_taxonomy_checkbox').change(function () {
-    $('li a[href="#organizations"],li a[href="#locations"]').toggle(!$(this).prop('checked'));
+  $('#override_taxonomy_checkbox').change(function () {
+    $('li a[href="#organizations"],li a[href="#locations"]').toggle($(this).prop('checked'));
   });
 
-  $('li a[href="#organizations"]').toggle($('#filter_resource_type').data('allow-organizations') && !$('#inheriting_taxonomy_checkbox').prop('checked'));
-  $('li a[href="#locations"]').toggle($('#filter_resource_type').data('allow-locations') && !$('#inheriting_taxonomy_checkbox').prop('checked'));
+  $('li a[href="#organizations"]').toggle($('#filter_resource_type').data('allow-organizations') && $('#override_taxonomy_checkbox').prop('checked'));
+  $('li a[href="#locations"]').toggle($('#filter_resource_type').data('allow-locations') && $('#override_taxonomy_checkbox').prop('checked'));
 });
