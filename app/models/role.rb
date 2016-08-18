@@ -36,6 +36,7 @@ class Role < ActiveRecord::Base
   validates_lengths_from_database
 
   before_destroy :check_deletable
+  after_save :sync_inheriting_filters
 
   has_many :user_roles, :dependent => :destroy
   has_many :users, :through => :user_roles, :source => :owner, :source_type => 'User'
@@ -171,6 +172,10 @@ class Role < ActiveRecord::Base
   end
 
   private
+
+  def sync_inheriting_filters
+    self.filters.where(:inheriting => true).each { |f| f.inherit_taxonomies! }
+  end
 
   def allowed_permissions
     @allowed_permissions ||= permission_names + Foreman::AccessControl.public_permissions.map(&:name)

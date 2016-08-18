@@ -46,6 +46,7 @@ class Filter < ActiveRecord::Base
   scope :limited, -> { where("search IS NOT NULL OR taxonomy_search IS NOT NULL") }
 
   scoped_search :on => :search, :complete_value => true
+  scoped_search :on => :inheriting, :complete_value => { :true => true, :false => false }
   scoped_search :on => :limited, :complete_value => { :true => true, :false => false }, :ext_method => :search_by_limited, :only_explicit => true
   scoped_search :on => :unlimited, :complete_value => { :true => true, :false => false }, :ext_method => :search_by_unlimited, :only_explicit => true
   scoped_search :in => :role, :on => :id, :rename => :role_id, :complete_enabled => false, :only_explicit => true
@@ -53,7 +54,8 @@ class Filter < ActiveRecord::Base
   scoped_search :in => :permissions, :on => :resource_type, :rename => :resource
   scoped_search :in => :permissions, :on => :name,          :rename => :permission
 
-  before_validation :build_taxonomy_search, :nilify_empty_searches
+  before_validation :build_taxonomy_search, :nilify_empty_searches, :enforce_inheriting_flag
+  before_save :inherit_taxonomies
 
   validates :search, :presence => true, :unless => Proc.new { |o| o.search.nil? }
   validates_with ScopedSearchValidator
@@ -114,6 +116,10 @@ class Filter < ActiveRecord::Base
     end
   end
 
+  def allows_taxonomies_filtering?
+    allows_organization_filtering? || allows_location_filtering?
+  end
+
   def allows_organization_filtering?
     granular? && resource_class.allows_organization_filtering?
   end
@@ -150,6 +156,17 @@ class Filter < ActiveRecord::Base
       self.location_ids = Location.where(:id => new_objects).pluck(:id) if self.allows_location_filtering?
       self.save! # to recalculate taxonomy_search which is normally triggered by validation
     end
+  end
+
+  def inherit_taxonomies
+    if self.inheriting?
+      inherit_taxonomies!
+    end
+  end
+
+  def inherit_taxonomies!
+    self.organization_ids = self.role.organization_ids if self.allows_organization_filtering?
+    self.location_ids = self.role.location_ids if self.allows_location_filtering?
   end
 
   private
@@ -210,5 +227,9 @@ class Filter < ActiveRecord::Base
     if self.location_ids.present? && !self.allows_location_filtering?
       errors.add(:location_ids, _('You can\'t assign locations to this resource'))
     end
+  end
+
+  def enforce_inheriting_flag
+    self.inheriting = true unless self.allows_taxonomies_filtering?
   end
 end

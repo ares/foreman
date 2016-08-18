@@ -16,6 +16,7 @@
       <th><%= sort :resource, :as => s_("Filter|Resource") %></th>
       <th><%= s_("Filter|Permissions") %></th>
       <th><%= sort :search, :as => s_("Filter|Unlimited") %></th>
+      <th><%= sort :search, :as => s_("Filter|Inheriting") %></th>
       <th><%= sort :search, :as => s_("Filter|Search") %></th>
       <th><%= _('Actions') %></th>
     </tr>
@@ -35,6 +36,7 @@
         </td>
         <td><%= filter.permissions.map(&:name).join(', ') %></td>
         <td><%= checked_icon filter.unlimited? %></td>
+        <td><%= checked_icon filter.inheriting? %></td>
         <td>
           <%= content_tag('span', link_to_if_authorized(filter.search || _('none'),
                                                       hash_for_edit_filter_path(:id => filter, :role_id => @role).
