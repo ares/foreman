@@ -33,7 +33,6 @@ class RolesController < ApplicationController
     @role = role_from_form
 
     if @role.save
-      # @role.set_taxonomies(taxonomy_params!) if cloning?
       process_success
     else
       process_error
@@ -91,7 +90,9 @@ class RolesController < ApplicationController
     if cloning?
       new_role = Role.find(params[:original_role_id]).
                    deep_clone(:include => [:filters => :filterings])
-      new_role.name    = params[:role][:name]
+      new_role.name = params[:role][:name]
+      new_role.organization_ids = params[:role][:organization_ids]
+      new_role.location_ids = params[:role][:location_ids]
       new_role.builtin = false
     else
       new_role = Role.new(role_params)

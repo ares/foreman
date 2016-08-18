@@ -98,7 +98,7 @@ class Filter < ActiveRecord::Base
   end
 
   def resource_type
-    type = @resource_type || permissions.first.try(:resource_type)
+    type = @resource_type || filterings.first.try(:permission).try(:resource_type)
     type.blank? ? nil : type
   end
 
