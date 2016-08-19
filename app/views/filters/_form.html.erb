@@ -44,7 +44,7 @@
 
       <div id="override_taxonomy_form" class="<%= f.object.allows_taxonomies_filtering? ? '' : 'hidden' %>">
         <%= checkbox_f f, :override?,
-                       :help_inline => _("Filters inherit organizations and locations from their role by default. If this is checked, filter can override set of its organizations and locations."),
+                       :help_inline => _("Filters inherit organizations and locations from their role by default. If override field is enabled, filter can override the set of its organizations and locations. Later role changes will not affect such filter. After disabling override field, role organizations and locations apply again."),
                        :id => 'override_taxonomy_checkbox' %>
       </div>
 

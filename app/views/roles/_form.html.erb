@@ -14,14 +14,10 @@
       <%= hidden_field_tag :original_role_id, @original_role_id if @cloned_role %>
 
       <% if show_location_tab? || show_organization_tab? %>
-        <h6><%= popover("", _("Whenever organizations or locations role association is changed, it will propagate to all role filters overriding filter current associations.
-                               If some filter is modified later resulting in a different set or organizations or locations a warning will be displayed. Note that this might
-                               be desired configuration, therefore only the warning. You can easily enforce all filters reset to role organizations and locations.
-                               Also note that not all filters support organizations and locations so these always remain global. Another thing to be aware of is that if you
-                               select no organization it means filters are global as long as you see all organizations in the menu. If you're a user that is only associated
-                               to a subset of organizations, you must select all organizations which effectively makes the role filters not global anymore. Same applies for
-                               locations. If you do not make any change to the form, filters with different set of organizations and locations will stay intact."),
-                        :title => _("Role organizations and locations.")).html_safe %> <%= _("Changes to following associations will propagate to all role filters.") %></h6>
+        <h6><%= popover("", _("Whenever organizations or locations role association is changed, the change will propagate to all inheriting filters.
+                               Filters that are set to override will remain untouched. Overriding of role filters can be easily disabled by
+                               Disable overriding filters action. Note that not all filters support organizations and locations so these always remain global."),
+                        :title => _("Role organizations and locations.")).html_safe %> <%= _("Changes to following associations will propagate to all inheriting filters.") %></h6>
       <% end %>
 
       <% if show_location_tab? %>
