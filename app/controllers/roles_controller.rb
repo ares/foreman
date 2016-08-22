@@ -54,8 +54,6 @@ class RolesController < ApplicationController
   end
 
   def update
-    # @role.set_taxonomies(taxonomy_params!)
-
     if @role.update_attributes(role_params)
       process_success
     else

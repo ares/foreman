@@ -23,7 +23,7 @@ module Api
       def_param_group :role do
         param :role, Hash, :required => true, :action_aware => true do
           param :name, String, :required => true
-          param_group :taxonomies
+          param_group :taxonomies, ::Api::V2::BaseController
         end
       end
 
@@ -40,9 +40,7 @@ module Api
       param_group :role
 
       def update
-        taxonomies = taxonomy_params!
         result = @role.update_attributes(role_params)
-        @role.set_taxonomies(taxonomies)
         process_response result
       end
 

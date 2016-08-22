@@ -139,22 +139,6 @@ class Role < ActiveRecord::Base
     save!
   end
 
-  def set_taxonomies(user_selected_ids)
-    user_selected_ids = user_selected_ids.reject(&:blank?).map(&:to_i)
-    existing_taxonomies = existing_taxonomy_ids
-    user_can_set = User.current.my_taxonomies_ids
-
-    if (existing_taxonomies & user_can_set).sort! != user_selected_ids.sort!
-      # we want to keep associations that user can't modify
-      taxonomies_to_add = (existing_taxonomies - user_can_set) + (user_selected_ids & user_can_set)
-      self.organization_ids = Organization.where(:id => taxonomies_to_add).pluck(:id) if Taxonomy.organizations_enabled
-      self.location_ids = Location.where(:id => taxonomies_to_add).pluck(:id) if Taxonomy.locations_enabled
-
-      # update all filters with taxonomies_to_add too
-      sync_filter_taxonomies(user_selected_ids, user_can_set)
-    end
-  end
-
   def disable_filters_overriding
     self.filters.where(:override => true).map { |filter| filter.disable_overriding! }
   end
@@ -181,12 +165,5 @@ class Role < ActiveRecord::Base
     errors.add(:base, _("Role is in use")) if users.any?
     errors.add(:base, _("Can't delete built-in role")) if builtin?
     errors.empty?
-  end
-
-  # this can generate a lot of queries but it's triggered only when role association changes or asked for
-  def sync_filter_taxonomies(selected, user_can_set)
-    self.filters.includes(:taxable_taxonomies).each do |filter|
-      filter.set_taxonomies(selected, user_can_set)
-    end
   end
 end
