@@ -73,7 +73,7 @@ class RolesControllerTest < ActionController::TestCase
     assert_not_nil Role.find_by_id(roles(:manager).id)
   end
 
-  test 'should reset filter taxonomies' do
+  test 'should disable filter overriding' do
     permission1 = FactoryGirl.create(:permission, :domain, :name => 'permission1')
     role = FactoryGirl.build(:role, :permissions => [])
     role.add_permissions! [ permission1.name ]
@@ -82,13 +82,14 @@ class RolesControllerTest < ActionController::TestCase
     role.organizations = [ org1 ]
     role.filters.reload
     filter_with_org = role.filters.detect { |f| f.allows_organization_filtering? }
-    filter_with_org.organizations = [ org1, org2 ]
+    filter_with_org.update_attributes :organizations => [ org1, org2 ], :override => true
 
-    patch :reset_filter_taxonomies, { :id => role.id }, set_session_user
+    patch :disable_filters_overriding, { :id => role.id }, set_session_user
+    filter_with_org.reload
 
     assert_response :redirect
-    filter_with_org.reload
     assert_equal [ org1 ], filter_with_org.organizations
+    refute filter_with_org.override?
   end
 
   context 'clone' do

@@ -143,10 +143,6 @@ class Role < ActiveRecord::Base
     self.filters.where(:override => true).map { |filter| filter.disable_overriding! }
   end
 
-  def existing_taxonomy_ids
-    self.taxable_taxonomies.pluck(:taxonomy_id)
-  end
-
   private
 
   def sync_inheriting_filters

@@ -177,224 +177,40 @@ class RoleTest < ActiveSupport::TestCase
       @filter_without_org = @role.filters.detect { |f| !f.allows_organization_filtering? }
     end
 
-    describe "#set_taxonomies" do
-      it "allows adding organization for admin for global role" do
-        as_admin do
-          @role.set_taxonomies([ @org1.id ])
-        end
-
-        @role.organizations.must_include @org1
-        @role.organizations.wont_include @org2
-        @filter_with_org.organizations.must_include @org1
-        @filter_with_org.organizations.wont_include @org2
+    describe '#sync_inheriting_filters' do
+      it 'automatically propagates taxonomies to filters after save' do
+        @role.organizations = [ @org1 ]
+        @role.save
         @filter_with_org.reload
-        @filter_with_org.taxonomy_search.must_be :present?
-        @filter_without_org.organizations.wont_include @org1
-        @filter_without_org.organizations.wont_include @org2
+        assert_equal [ @org1 ], @filter_with_org.organizations
       end
 
-      it "can change the association of organizations for admin" do
-        @role.organization_ids = [ @org1.id ]
-        as_admin do
-          @role.set_taxonomies([ @org2.id ])
-        end
-
-        @role.organizations.must_include @org2
-        @role.organizations.wont_include @org1
-        @filter_with_org.organizations.must_include @org2
-        @filter_with_org.organizations.wont_include @org1
+      it 'automatically propagates taxonomies only to inheriting filters' do
+        @filter_with_org.update_attribute :override, true
+        @role.organizations = [ @org2 ]
+        @role.save
         @filter_with_org.reload
-        @filter_with_org.taxonomy_search.must_be :present?
-        @filter_without_org.organizations.wont_include @org1
-        @filter_without_org.organizations.wont_include @org2
+        assert_empty @filter_with_org.organizations
       end
 
-      context "user scoped to some organizations" do
-        setup do
-          @org3 = FactoryGirl.create(:organization)
-          @org4 = FactoryGirl.create(:organization)
-          @user = FactoryGirl.create(:user)
-          @user.organizations = [ @org3, @org4 ]
-        end
-
-        it "allows to only set user's organizations converting global role to org limited role" do
-          as_user @user do
-            @role.set_taxonomies([ @org3.id, @org4.id ])
-          end
-
-          @role.organizations.wont_include @org1
-          @role.organizations.wont_include @org2
-          @role.organizations.must_include @org3
-          @role.organizations.must_include @org4
-
-          @filter_with_org.organizations.wont_include @org1
-          @filter_with_org.organizations.wont_include @org2
-          @filter_with_org.organizations.must_include @org3
-          @filter_with_org.organizations.must_include @org4
-          @filter_with_org.reload
-          @filter_with_org.taxonomy_search.must_be :present?
-          @filter_without_org.organizations.wont_include @org1
-          @filter_without_org.organizations.wont_include @org2
-          @filter_without_org.organizations.wont_include @org3
-          @filter_without_org.organizations.wont_include @org4
-        end
-
-        it "allows to only set user's organizations adding more orgs to existing list" do
-          @role.organization_ids = [ @org1.id, @org3.id ]
-          as_user @user do
-            @role.set_taxonomies([ @org3.id, @org4.id ])
-          end
-
-          @role.organizations.must_include @org1
-          @role.organizations.wont_include @org2
-          @role.organizations.must_include @org3
-          @role.organizations.must_include @org4
-
-          @filter_with_org.organizations.wont_include @org1 # since the filter was already out of sync
-          @filter_with_org.organizations.wont_include @org2
-          @filter_with_org.organizations.must_include @org3
-          @filter_with_org.organizations.must_include @org4
-          @filter_with_org.reload
-          @filter_with_org.taxonomy_search.must_be :present?
-          @filter_without_org.organizations.wont_include @org1
-          @filter_without_org.organizations.wont_include @org2
-          @filter_without_org.organizations.wont_include @org3
-          @filter_without_org.organizations.wont_include @org4
-        end
-
-        it "allows to only set user's organizations ignoring orgs that user is not assigned to" do
-          @role.organization_ids = []
-          as_user @user do
-            @role.set_taxonomies([ @org1.id, @org4.id ])
-          end
-
-          @role.organizations.wont_include @org1
-          @role.organizations.wont_include @org2
-          @role.organizations.wont_include @org3
-          @role.organizations.must_include @org4
-
-          @filter_with_org.organizations.wont_include @org1 # because user can't assign this org
-          @filter_with_org.organizations.wont_include @org2
-          @filter_with_org.organizations.wont_include @org3
-          @filter_with_org.organizations.must_include @org4
-          @filter_with_org.reload
-          @filter_with_org.taxonomy_search.must_be :present?
-          @filter_without_org.organizations.wont_include @org1
-          @filter_without_org.organizations.wont_include @org2
-          @filter_without_org.organizations.wont_include @org3
-          @filter_without_org.organizations.wont_include @org4
-        end
-
-        it "allows to only set user's organizations adding more orgs to existing list keeping filter associations that use can't change" do
-          @role.organization_ids = [ @org1.id, @org3.id ]
-          @filter_with_org.organization_ids = [ @org1.id, @org4.id ]
-          as_user @user do
-            @role.set_taxonomies([ @org3.id, @org4.id ])
-          end
-
-          @role.organizations.must_include @org1
-          @role.organizations.wont_include @org2
-          @role.organizations.must_include @org3
-          @role.organizations.must_include @org4
-
-          @filter_with_org.reload
-          @filter_with_org.organizations.must_include @org1 # since the filter was already out of sync
-          @filter_with_org.organizations.wont_include @org2
-          @filter_with_org.organizations.must_include @org3
-          @filter_with_org.organizations.must_include @org4
-          @filter_with_org.taxonomy_search.must_be :present?
-          @filter_without_org.organizations.wont_include @org1
-          @filter_without_org.organizations.wont_include @org2
-          @filter_without_org.organizations.wont_include @org3
-          @filter_without_org.organizations.wont_include @org4
-        end
-
-        it "supports organization and location ids at the same time" do
-          @loc1 = FactoryGirl.create(:location)
-          @loc2 = FactoryGirl.create(:location)
-          @role.location_ids = [ @loc2.id ]
-          @filter_with_org.organization_ids = [ @org1.id ]
-          @filter_with_org.location_ids = [ @loc2.id ]
-          @user.location_ids = [ @loc1.id, @loc2.id ]
-          as_user @user do
-            @role.set_taxonomies([ @org3.id, @org4.id, @loc1.id ])
-          end
-
-          @role.organizations.wont_include @org1
-          @role.organizations.wont_include @org2
-          @role.organizations.must_include @org3
-          @role.organizations.must_include @org4
-          @role.locations.must_include @loc1
-
-          @filter_with_org.reload
-          @filter_with_org.organizations.must_include @org1
-          @filter_with_org.organizations.wont_include @org2
-          @filter_with_org.organizations.must_include @org3
-          @filter_with_org.organizations.must_include @org4
-          @filter_with_org.locations.must_include @loc1
-          @filter_with_org.locations.wont_include @loc2
-          @filter_with_org.taxonomy_search.must_be :present?
-          @filter_without_org.organizations.wont_include @org1
-          @filter_without_org.organizations.wont_include @org2
-          @filter_without_org.organizations.wont_include @org3
-          @filter_without_org.organizations.wont_include @org4
-          @filter_without_org.locations.wont_include @loc1
-          @filter_without_org.locations.wont_include @loc2
-        end
+      it 'does not touch filters that do not support taxonomies' do
+        @role.organizations = [ @org1 ]
+        @role.save
+        @filter_without_org.reload
+        assert_empty @filter_without_org.organizations
+        assert_nil @filter_without_org.taxonomy_search
       end
     end
 
-    describe '#filters_out_of_sync?' do
-      it 'should ignore non-taxable filters' do
-        @role.filters = [ @filter_without_org ]
-        refute @role.filters_out_of_sync?
-      end
-
-      it 'should detect filter out of sync' do
-        as_admin do
-          @filter_with_org.organizations = [ @org1 ]
-          assert @role.filters_out_of_sync?
-        end
-      end
-
-      it 'should return false if there is no filter out of sync' do
+    describe '#disale_filters_overriding' do
+      it 'disables overriding and inherits taxonomies' do
+        @filter_with_org.update_attribute :override, true
         @role.organizations = [ @org1 ]
         as_admin do
-          @role.set_filter_taxonomies
-          refute @role.filters_out_of_sync?
-        end
-      end
-    end
-
-    describe '#filter_out_of_sync' do
-      it 'finds all out of sync filters' do
-        as_admin do
-          @filter_with_org.organizations = [ @org1 ]
-          assert_equal [ @filter_with_org ], @role.filters_out_of_sync
-        end
-      end
-    end
-
-    describe '#existing_taxonomy_ids' do
-      it 'returns taxable taxonomy ids' do
-        @loc1 = FactoryGirl.create(:location)
-        @role.organizations = [ @org1, @org2 ]
-        @role.locations = [ @loc1 ]
-        result = @role.existing_taxonomy_ids
-        assert_equal 3, result.size
-        assert_includes result, @org1.id
-        assert_includes result, @org2.id
-        assert_includes result, @loc1.id
-      end
-    end
-
-    describe '#set_filter_taxonomies' do
-      it 'fixes filter out of sync' do
-        @role.organizations = [ @org1 ]
-        as_admin do
-          @role.set_filter_taxonomies
+          @role.disable_filters_overriding
           @filter_with_org.reload
           assert_equal [ @org1 ], @filter_with_org.organizations
+          refute @filter_with_org.override
         end
       end
     end

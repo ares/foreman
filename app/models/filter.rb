@@ -155,14 +155,10 @@ class Filter < ActiveRecord::Base
   def inherit_taxonomies!
     self.organization_ids = self.role.organization_ids if self.allows_organization_filtering?
     self.location_ids = self.role.location_ids if self.allows_location_filtering?
-    build_taxonomy_search # TODO deserves test
+    build_taxonomy_search
   end
 
   private
-
-  def existing_taxonomy_ids
-    self.taxable_taxonomies.pluck(:taxonomy_id)
-  end
 
   def build_taxonomy_search
     orgs = build_taxonomy_search_string('organization')
