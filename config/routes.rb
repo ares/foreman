@@ -265,7 +265,7 @@ Foreman::Application.routes.draw do
     resources :roles, :except => [:show] do
       member do
         get 'clone'
-        patch 'reset_filter_taxonomies'
+        patch 'disable_filters_overriding'
       end
       collection do
         get 'auto_complete_search'
@@ -274,7 +274,7 @@ Foreman::Application.routes.draw do
 
     resources :filters, :except => [:show] do
       member do
-        patch 'reset_filter_taxonomies'
+        patch 'disable_overriding'
       end
       collection do
         get 'auto_complete_search'

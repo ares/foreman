@@ -32,7 +32,6 @@
         <% end %>
         <td>
           <%= _(filter.resource_class.try(:humanize_class_name) || filter.resource_type || '(Miscellaneous)') %>
-          <%= filter_status(filter) %>
         </td>
         <td><%= filter.permissions.map(&:name).join(', ') %></td>
         <td><%= checked_icon filter.unlimited? %></td>
@@ -46,7 +45,7 @@
           <%= action_buttons(
                     display_link_if_authorized(_("Edit"), hash_for_edit_filter_path(:id => filter, :role_id => @role).
                             merge(:auth_object => filter, :authorizer => authorizer)),
-                    display_link_if_authorized(_("Sync organizations and locations"), hash_for_reset_filter_taxonomies_filter_path(:id => filter, :role_id => @role).
+                    display_link_if_authorized(_("Disable overriding"), hash_for_disable_overriding_filter_path(:id => filter, :role_id => @role).
                             merge(:auth_object => filter, :authorizer => authorizer), :method => :patch),
                     display_delete_if_authorized(hash_for_filter_path(:id => filter, :role_id => @role).
                                                          merge(:auth_object => filter, :authorizer => authorizer),

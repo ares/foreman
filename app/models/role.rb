@@ -155,16 +155,8 @@ class Role < ActiveRecord::Base
     end
   end
 
-  def set_filter_taxonomies
-    sync_filter_taxonomies(existing_taxonomy_ids, User.current.my_taxonomies_ids)
-  end
-
-  def filters_out_of_sync?
-    self.filters.includes(:taxable_taxonomies).any? { |filter| filter.taxonomies_out_of_sync? }
-  end
-
-  def filters_out_of_sync
-    self.filters.includes(:taxable_taxonomies).select { |filter| filter.taxonomies_out_of_sync? }
+  def disable_filters_overriding
+    self.filters.where(:override => true).map { |filter| filter.disable_overriding! }
   end
 
   def existing_taxonomy_ids

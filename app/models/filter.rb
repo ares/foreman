@@ -141,21 +141,9 @@ class Filter < ActiveRecord::Base
     role.usergroups.each { |g| g.expire_topbar_cache(sweeper) }
   end
 
-  def taxonomies_out_of_sync?
-    return false if !allows_location_filtering? || !allows_organization_filtering?
-
-    user_can_set = User.current.my_taxonomies_ids
-    (existing_taxonomy_ids & user_can_set).sort != (role.existing_taxonomy_ids & user_can_set).sort
-  end
-
-  def set_taxonomies(user_selected, user_can_set = User.current.my_taxonomies_ids)
-    existing_taxonomies = existing_taxonomy_ids
-    if (existing_taxonomies & user_can_set).sort != user_selected.sort
-      new_objects = (existing_taxonomies - user_can_set) + (user_selected & user_can_set)
-      self.organization_ids = Organization.where(:id => new_objects).pluck(:id) if self.allows_organization_filtering?
-      self.location_ids = Location.where(:id => new_objects).pluck(:id) if self.allows_location_filtering?
-      self.save! # to recalculate taxonomy_search which is normally triggered by validation
-    end
+  def disable_overriding!
+    self.override = false
+    self.save!
   end
 
   def inherit_taxonomies
@@ -167,6 +155,7 @@ class Filter < ActiveRecord::Base
   def inherit_taxonomies!
     self.organization_ids = self.role.organization_ids if self.allows_organization_filtering?
     self.location_ids = self.role.location_ids if self.allows_location_filtering?
+    build_taxonomy_search # TODO deserves test
   end
 
   private

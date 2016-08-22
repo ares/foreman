@@ -46,17 +46,17 @@ class FiltersController < ApplicationController
     end
   end
 
-  def reset_filter_taxonomies
+  def disable_overriding
     @filter = resource_base.find(params[:id])
-    @filter.set_taxonomies(@role.existing_taxonomy_ids)
-    process_success :success_msg => _('Filter organizations and locations has been synchronized with it\'s role')
+    @filter.disable_overriding!
+    process_success :success_msg => _('Filter overriding has been disabled')
   end
 
   private
 
   def action_permission
     case params[:action]
-      when 'reset_filter_taxonomies'
+      when 'disable_overriding'
         'edit'
       else
         super
