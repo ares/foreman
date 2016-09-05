@@ -212,8 +212,7 @@ module FormHelper
       content_tag(:span, ' ' + _('Specified value is higher than recommended maximum'), :class => 'error-message')
     end
 
-    javascript_include_tag("jquery.ui.custom_spinners.js") +
-      text_f(f, attr, options) +
+    text_f(f, attr, options) +
       f.hidden_field(attr, :id => "#{base_id}_hidden")
   end
 

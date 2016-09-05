@@ -125,6 +125,7 @@ function onContentLoad(){
   $('input.remove_form_templates').closest('form').submit(function(event) {
     $(this).find('.form_template').remove()
   })
+  tfm.initByteSpinner();
 }
 
 function activateDatatables() {

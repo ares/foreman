@@ -96,10 +96,12 @@ $(function () {
       }
     }
   });
+});
 
+export function initByteSpinner(){
   $("input.byte_spinner").each(function () {
     var target = $(this).parents('div').children('span.help-block').children('span.maximum-limit');
     $(this).byte_spinner({value_target: $(this).attr('id') + "_hidden", soft_maximum: $(this).data('softMax'), error_target: target});
     $(this).change(function() { $(this).byte_spinner("update_value_target") })
   });
-});
+}
