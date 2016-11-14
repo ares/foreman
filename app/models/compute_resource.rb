@@ -77,6 +77,10 @@ class ComputeResource < ActiveRecord::Base
     all_providers[name]
   end
 
+  def self.provider_for_class(name)
+    all_providers.key(name.to_s)
+  end
+
   # allows to create a specific compute class based on the provider.
   def self.new_provider(args)
     provider = args.delete(:provider)
@@ -324,6 +328,18 @@ class ComputeResource < ActiveRecord::Base
 
   def image_exists?(image)
     true
+  end
+
+  def supports_hypervisors_reporting?
+    false
+  end
+
+  def provider
+    self.class.provider_for_class(self.class)
+  end
+
+  def hypervisors
+    raise NotImplementedError unless supports_hypervisors_reporting?
   end
 
   protected

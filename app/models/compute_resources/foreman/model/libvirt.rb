@@ -190,6 +190,21 @@ module Foreman::Model
       vm_attrs
     end
 
+    def supports_hypervisors_reporting?
+      true
+    end
+
+    def hypervisors
+      [
+        ComputeResources::Hypervisor.new(
+          :uuid => hypervisor.uuid,
+          :type => hypervisor.type,
+          :version => hypervisor.version,
+          :sockets => hypervisor.sockets,
+          :compute_resource => self)
+      ]
+    end
+
     protected
 
     def client

@@ -322,6 +322,24 @@ module Foreman::Model
       attrs[:public_key] = key
     end
 
+    def supports_hypervisors_reporting?
+      true
+    end
+
+    def hypervisors
+      client.hosts.map do |host|
+        ComputeResources::Hypervisor.new(
+          :uuid => host.id,
+          :type => 'qemu',
+          :version => host.full_version,
+          :sockets => host.cpu_sockets,
+          :compute_resource => self)
+      end
+    rescue => e
+      Foreman::Logging.exception("Failed to load hypervisors", e)
+      []
+    end
+
     protected
 
     def bootstrap(args)
