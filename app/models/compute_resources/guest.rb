@@ -50,7 +50,7 @@ module ComputeResources
     # TODO virt-who specific
     def vw_attributes
       {
-        :guestId => uuid.downcase,
+        :guestId => uuid,
         :state => VIRTWHO_MAPPING[state.upcase], # TODO zjistim jak virt_who tohle dela
         :attributes => {
           :virtWhoType => @compute_resource.provider.downcase, # needs mapping to --libvirt|--vdsm|--esx|--rhevm|--hyperv

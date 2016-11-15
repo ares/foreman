@@ -457,6 +457,19 @@ module Foreman::Model
       "VMware"
     end
 
+    def supports_hypervisors_reporting?
+      true
+    end
+
+    def hypervisors
+      FogExtensions::Vsphere::MiniServers.new(client, datacenter).all_hosts.map do |host|
+        ComputeResources::Hypervisor.build_by_raw_data(self, host)
+      end
+    rescue => e
+      Foreman::Logging.exception("Failed to load hypervisors", e)
+      return []
+    end
+
     private
 
     def dc

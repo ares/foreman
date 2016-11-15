@@ -33,7 +33,7 @@ module ComputeResources
         :uuid => uuid.downcase, # TODO must be also able to use hostname or "hwuuid"
         :guests => guests.map(&:vw_attributes),
         :facts => {
-          :"hypervisor.type" => type, # qemu nebo neco jinyho
+          :"hypervisor.type" => type, # qemu nebo VMware ESXi, definovat by se mel hypervisor sam
           :"cpu.cpu_socket(s)" => sockets,
           :"hypervisor.version" => version
         }

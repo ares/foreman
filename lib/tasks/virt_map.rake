@@ -7,7 +7,8 @@ Examples:
 END_DESC
 
   task :sync_all => :environment do
-    ComputeResource.all.each do |compute_resource|
+    #ComputeResource.all.each do |compute_resource|
+    Foreman::Model::Vmware.all.each do |compute_resource|
       unless compute_resource.supports_hypervisors_reporting?
         puts "ignoring CR #{compute_resource.name} since it's type #{compute_resource.type} is not supported"
         next
