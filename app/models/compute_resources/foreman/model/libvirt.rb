@@ -196,12 +196,7 @@ module Foreman::Model
 
     def hypervisors
       [
-        ComputeResources::Hypervisor.new(
-          :uuid => hypervisor.uuid,
-          :type => hypervisor.type,
-          :version => hypervisor.version,
-          :sockets => hypervisor.sockets,
-          :compute_resource => self)
+        ComputeResources::Hypervisor.new(:compute_resource => self)
       ]
     end
 

@@ -342,6 +342,10 @@ class ComputeResource < ActiveRecord::Base
     raise NotImplementedError unless supports_hypervisors_reporting?
   end
 
+  def mapper(klass)
+    "ComputeResources::#{self.provider}Mapper::#{klass.to_s}Mapper".constantize.new(self)
+  end
+
   protected
 
   def client

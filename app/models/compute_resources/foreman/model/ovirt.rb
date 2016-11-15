@@ -323,21 +323,14 @@ module Foreman::Model
     end
 
     def supports_hypervisors_reporting?
-      true
+      true # if self.name == 'QE RHEV'
     end
 
     def hypervisors
-      client.hosts.map do |host|
-        ComputeResources::Hypervisor.new(
-          :uuid => host.id,
-          :type => 'qemu',
-          :version => host.full_version,
-          :sockets => host.cpu_sockets,
-          :compute_resource => self)
-      end
+      client.hosts.map { |host| ComputeResources::Hypervisor.build_by_raw_data(self, host) }
     rescue => e
       Foreman::Logging.exception("Failed to load hypervisors", e)
-      []
+      return []
     end
 
     protected

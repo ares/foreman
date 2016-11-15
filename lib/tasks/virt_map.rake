@@ -24,7 +24,7 @@ END_DESC
 
   def generate_hash(compute_resource)
     {
-      :hypervisors => compute_resource.hypervisors.map(&:attributes)
+      :hypervisors => compute_resource.hypervisors.map(&:vw_attributes)
     }
   end
 end
