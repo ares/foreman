@@ -10,6 +10,9 @@ require 'facet_test_helper'
 require 'active_support_test_case_helper'
 require 'foreman_tasks/test_helpers'
 
+ForemanTasks.dynflow.require!
+ForemanTasks.dynflow.config.disable_active_record_actions = true
+
 Shoulda::Matchers.configure do |config|
   config.integrate do |with|
     with.test_framework :minitest_4
