@@ -11,14 +11,14 @@ module Actions
           output[:errors] = ::PuppetClassImporter.new.obsolete_and_new(input[:changed]).try(:to_sentence)
         end
 
-        def humanized_input
+        def humanized_output
           return nil if input[:changed].nil?
 
-          humanized_input = []
-          humanized_input << _('Add') + ' ' + format_env_and_classes_input(input[:changed][:new]) if input[:changed][:new].present?
-          humanized_input << _('Remove') + ' ' + format_env_and_classes_input(input[:changed][:obsolete]) if input[:changed][:obsolete].present?
-          humanized_input << _('Update') + ' ' + format_env_and_classes_input(input[:changed][:updated]) if input[:changed][:updated].present?
-          humanized_input.join('\n')
+          humanized_output = []
+          humanized_output << _('Add') + ' ' + format_env_and_classes_input(input[:changed][:new]) if input[:changed][:new].present?
+          humanized_output << _('Remove') + ' ' + format_env_and_classes_input(input[:changed][:obsolete]) if input[:changed][:obsolete].present?
+          humanized_output << _('Update') + ' ' + format_env_and_classes_input(input[:changed][:updated]) if input[:changed][:updated].present?
+          humanized_output.join("\n")
         end
 
         def rescue_strategy
@@ -38,7 +38,11 @@ module Actions
 
         def format_env_and_classes_input(selection)
           selection.map do |environment, classes|
-            _('environment') + " #{environment} (#{classes.size} " + _('classes') + ")"
+            result = _('environment') + " #{environment}"
+            classes = JSON.parse(classes)
+            no_classes_info = classes.include?('_destroy_')
+            result +=  " (#{classes.size} " + _('classes') + ")" unless no_classes_info
+            result
           end.join(', ')
         end
       end
