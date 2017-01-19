@@ -2,15 +2,20 @@ require 'tempfile'
 
 module Foreman
   module Renderer
+    class RenderingError < Foreman::Exception; end
+    class HostUnknown < RenderingError; end
+    class HostOSUnknown < RenderingError; end
+
     include ::Foreman::ForemanUrlRenderer
 
     ALLOWED_GENERIC_HELPERS ||= [ :foreman_url, :snippet, :snippets, :snippet_if_exists, :indent, :foreman_server_fqdn,
                                   :foreman_server_url, :log_debug, :log_info, :log_warn, :log_error, :log_fatal, :template_name, :dns_lookup,
-                                  :pxe_kernel_options ]
+                                  :pxe_kernel_options, :save_to_file ]
     ALLOWED_HOST_HELPERS ||= [ :grub_pass, :ks_console, :root_pass,
                                :media_path, :param_true?, :param_false?, :match,
                                :host_param_true?, :host_param_false?,
-                               :host_param, :host_puppet_classes, :host_enc ]
+                               :host_param, :host_puppet_classes, :host_enc, :host_os_rhel_compatible?, :host_os_family, :host_os_name,
+                               :host_os_major, :host_os_minor, :host_puppet_enabled? ]
 
     ALLOWED_HELPERS ||= ALLOWED_GENERIC_HELPERS + ALLOWED_HOST_HELPERS
 
@@ -114,6 +119,40 @@ module Foreman
       snippet name, options.merge(:silent => true)
     end
 
+    def save_to_file(filename, content)
+      "cat << EOF > #{filename}\n#{content}EOF"
+    end
+
+    def host_os_rhel_compatible?
+      check_host_os
+      host_os_family == 'Redhat' && host_os_name != 'Fedora'
+    end
+
+    def host_os_family
+      check_host_os
+      @host.operatingsystem.try(:family)
+    end
+
+    def host_os_name
+      check_host_os
+      @host.operatingsystem.try(:name)
+    end
+
+    def host_os_major
+      check_host_os
+      @host.operatingsystem.try(:major).to_i
+    end
+
+    def host_os_minor
+      check_host_os
+      @host.operatingsystem.try(:minor).to_i
+    end
+
+    def host_puppet_enabled?
+      check_host
+      !@host.puppetmaster.empty?
+    end
+
     def indent(count)
       return unless block_given? && (text = yield.to_s)
       prefix = " " * count
@@ -175,6 +214,15 @@ module Foreman
     end
 
     private
+
+    def check_host
+      raise HostUnknown, _('This templates requires a host to render but none was specified') if @host.nil?
+    end
+
+    def check_host_os
+      check_host
+      raise HostOSUnknown, _('Operating system not set for host %s') % @host.name if @host.operatingsystem.nil?
+    end
 
     # takes variable names array and loads instance variables with the same name like this
     # { :name => @name, :another => @another }

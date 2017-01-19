@@ -105,5 +105,28 @@ FactoryGirl.define do
       type 'Solaris'
       title 'Solaris 10.8'
     end
+
+    factory :fedora, class: Redhat do
+      sequence(:name) { 'Fedora' }
+      major '24'
+      type 'Redhat'
+      title 'Fedora 24'
+    end
+
+    factory :centos, class: Redhat do
+      sequence(:name) { 'Centos' }
+      major '6'
+      minor '8'
+      type 'Redhat'
+      title 'Centos 6.8'
+    end
+
+    factory :rhel, class: Redhat do
+      sequence(:name) { 'RedHat' }
+      major '7'
+      minor '2'
+      type 'Redhat'
+      title 'RedHat 7.2'
+    end
   end
 end

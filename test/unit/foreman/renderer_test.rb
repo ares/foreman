@@ -173,11 +173,107 @@ class RendererTest < ActiveSupport::TestCase
       assert_equal 'A B C D', tmpl
     end
 
-    test "#{renderer_name} should render a snippet_if_exists with variables" do
+    test "#{renderer_name} should render a snippets with variables" do
       send "setup_#{renderer_name}"
       snippet = FactoryGirl.create(:provisioning_template, :snippet, :template => "A <%= @b + ' ' + @c -%> D")
       tmpl = @renderer.snippets(snippet.name, :variables => { :b => 'B', :c => 'C' })
       assert_equal 'A B C D', tmpl
+    end
+
+    test "#{renderer_name} should render a save_to_file macro" do
+      assert_renders('<%= save_to_file("/etc/puppet/puppet.conf", "[main]\nserver=example.com\n") %>', "cat << EOF > /etc/puppet/puppet.conf\n[main]\nserver=example.com\nEOF", nil)
+    end
+
+    test "#{renderer_name} should render host_os_rhel_compatible? macro to true for rhel" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => FactoryGirl.build(:rhel)
+      )
+      assert_renders('<%= host_os_rhel_compatible? %>', 'true', host)
+    end
+
+    test "#{renderer_name} should render host_os_rhel_compatible? macro to true for centos" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => FactoryGirl.build(:centos)
+      )
+      assert_renders('<%= host_os_rhel_compatible? %>', 'true', host)
+    end
+
+    test "#{renderer_name} should render host_os_rhel_compatible? macro to true for fedora" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => FactoryGirl.build(:fedora)
+      )
+      assert_renders('<%= host_os_rhel_compatible? %>', 'false', host)
+    end
+
+    test "#{renderer_name} should render host_os_family to Redhat for fedora" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => FactoryGirl.build(:fedora)
+      )
+      assert_renders('<%= host_os_family %>', 'Redhat', host)
+    end
+
+    test "#{renderer_name} should render host_os_name to Fedora for fedora" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => FactoryGirl.build(:fedora)
+      )
+      assert_renders('<%= host_os_name %>', 'Fedora', host)
+    end
+
+    test "#{renderer_name} should render host_os_major to 24 for fedora" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => FactoryGirl.build(:fedora, :major => 24)
+      )
+      assert_renders('<%= host_os_major %>', '24', host)
+    end
+
+    test "#{renderer_name} should render host_os_minor to 2 for rhel" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => FactoryGirl.build(:rhel, :minor => 2)
+      )
+      assert_renders('<%= host_os_minor %>', '2', host)
+    end
+
+    test "#{renderer_name} should render puppet_enabled? to true for host with puppetmaster set" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(:host, :with_puppet)
+      assert_renders('<%= host_puppet_enabled? %>', 'true', host)
+    end
+
+    test "#{renderer_name} should render puppet_enabled? to false for host without puppetmaster set" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(:host)
+      assert_renders('<%= host_puppet_enabled? %>', 'false', host)
+    end
+
+    test "#{renderer_name} should check host presence for host macros" do
+      %w(host_os_rhel_compatible? host_os_family host_os_name host_os_major host_os_minor host_puppet_enabled?).each do |macro|
+        assert_renders_with_error("<%= #{macro} %>", nil, Foreman::Renderer::HostUnknown)
+      end
+    end
+
+    test "#{renderer_name} should check host OS presence for host OS macros" do
+      send "setup_#{renderer_name}"
+      host = FactoryGirl.build(
+        :host,
+        :operatingsystem => nil
+      )
+      %w(host_os_rhel_compatible? host_os_family host_os_name host_os_major host_os_minor).each do |macro|
+        assert_renders_with_error("<%= #{macro} %>", host, Foreman::Renderer::HostOSUnknown)
+      end
     end
 
     test "#{renderer_name} should render a templates_used" do
@@ -293,5 +389,26 @@ class RendererTest < ActiveSupport::TestCase
 
   test 'templates_used is allowed to render for host' do
     assert Safemode.find_jail_class(Host::Managed).allowed? :templates_used
+  end
+
+  private
+
+  def assert_renders(template_content, output, host)
+    @renderer.host = host
+    template = mock('template')
+    template.stubs(:template).returns(template_content)
+    assert_nothing_raised do
+      content = @renderer.unattended_render(template)
+      assert_equal(output, content)
+    end
+  end
+
+  def assert_renders_with_error(template_content, host, error)
+    @renderer.host = host
+    template = mock('template')
+    template.stubs(:template).returns(template_content)
+    assert_raises(error) do
+      @renderer.unattended_render(template)
+    end
   end
 end
