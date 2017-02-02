@@ -3,6 +3,7 @@
     <%= selectable_f f, :pxe_loader,
       loaders.to_a, {
         :include_blank => blank_or_inherit_f(f, :pxe_loader),
+        :selected => f.object.is_a?(Hostgroup) ? f.object.self_pxe_loader : f.object.pxe_loader,
       },
       :label => _('PXE loader'),
       :help_inline => popover("", _("DHCP filename option to use. Set to None for non-PXE method (e.g. iPXE)"), :data => { :placement => 'top' }) %>

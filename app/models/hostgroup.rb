@@ -181,6 +181,15 @@ class Hostgroup < ActiveRecord::Base
     Setting[:root_pass]
   end
 
+  def pxe_loader
+    return read_attribute(:pxe_loader) if read_attribute(:pxe_loader).present?
+    nested(:pxe_loader)
+  end
+
+  def self_pxe_loader
+    read_attribute(:pxe_loader)
+  end
+
   include_in_clone :lookup_values, :hostgroup_classes, :locations, :organizations, :group_parameters
   exclude_from_clone :name, :title, :lookup_value_matcher
 
