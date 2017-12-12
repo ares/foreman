@@ -1,5 +1,7 @@
 require 'rss'
 require 'date'
+require "net/http"
+require "uri"
 
 module UINotifications
   class RssNotificationsChecker
@@ -36,7 +38,7 @@ module UINotifications
       # This is a noop every time rss_enable=false, the moment it
       # gets enabled, notifications for RSS feeds are created again
       return true unless Setting[:rss_enable]
-      feed = RSS::Parser.parse(@url, false)
+      feed = RSS::Parser.parse(load_rss_feed, false)
       feed.items[0, @latest_posts].each do |feed_item|
         item = Item.new(feed_item)
         blueprint = rss_notification_blueprint
@@ -69,6 +71,19 @@ module UINotifications
 
     def notification_already_exists?(item)
       !!Notification.unscoped.find_by_message(item.title)
+    end
+
+    def load_rss_feed
+      uri = URI.parse(@url)
+      Net::HTTP.start(uri.host, uri.port, :use_ssl => uri.scheme == 'https') do |http|
+        request = Net::HTTP::Get.new(uri.request_uri)
+        request.initialize_http_header({"User-Agent" => rss_user_agent})
+        http.request(request).body
+      end
+    end
+
+    def rss_user_agent
+      "Foreman/#{SETTINGS[:version]} (RSS notifications)"
     end
   end
 end
