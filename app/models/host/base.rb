@@ -428,20 +428,21 @@ module Host
       if iface && iface.identifier
         bond.remove_device(iface.identifier)
         bond.add_device(name)
+        logger.debug "Updating bond #{bond.identifier}, id #{bond.id}: removing #{iface.identifier}, adding #{name} to attached interfaces"
         save_updated_bond bond
       end
     end
 
     def save_updated_bond(bond)
-      logger.debug "Updating bond #{bond.identifier}, id #{bond.id}: removing #{iface.identifier}, adding #{name} to attached interfaces"
       bond.save!
-    rescue StandardError
-      logger.warn "Saving #{bond.identifier} NIC for host #{self.name} failed, skipping because:"
+    rescue StandardError => e
+      logger.warn "Saving #{bond.identifier} NIC for host #{self.name} failed, skipping because #{e.message}:"
       bond.errors.full_messages.each { |e| logger.warn " #{e}" }
     end
 
     def set_interface(attributes, name, iface)
       # update bond.attached_interfaces when interface is in the list and identifier has changed
+      update_bonds(iface, name, attributes) if iface.identifier != name && !iface.virtual? && iface.persisted?
       attributes = attributes.clone
       iface.mac = attributes.delete(:macaddress)
       iface.ip = attributes.delete(:ipaddress)
@@ -459,7 +460,6 @@ module Host
       iface.link = attributes.delete(:link) if attributes.has_key?(:link)
       iface.identifier = name
       iface.host = self
-      update_bonds(iface, name, attributes) if iface.identifier_changed? && !iface.virtual? && iface.persisted?
       update_virtuals(iface.identifier_was, name) if iface.identifier_changed? && !iface.virtual? && iface.persisted? && iface.identifier_was.present?
       iface.attrs = attributes
 
