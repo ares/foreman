@@ -1,3 +1,5 @@
+<% javascript 'template_input' %>
+
 <% url = if @template.persisted?
            public_send("#{@type_name_singular}_path", :id => @template)
          else
@@ -8,6 +10,7 @@
   <%= base_errors_for @template %>
   <ul class="nav nav-tabs" data-tabs="tabs">
     <li class="active"><a id="primary_tab" href="#primary" data-toggle="tab"><%= _("Template") %></a></li>
+    <li><a href="#template_inputs" data-toggle="tab"><%= _("Inputs") %></a></li>
     <%= render "#{@type_name_plural}/custom_tab_headers" unless type == 'ptable'%>
     <li><a id='history_tab' href="#history" data-toggle="tab"><%= _("History") %></a></li>
     <% if show_location_tab? %>
@@ -54,6 +57,18 @@
 
       <%= textarea_f f, :audit_comment, :size => "col-md-10", :rows => 3, :label => _("Audit Comment"),
                      :help_block => _("The Audit Comment field is saved with the template auditing to document the template changes") %>
+    </div>
+
+    <div class="tab-pane" id="template_inputs">
+      <div class="children_fields">
+        <%= new_child_fields_template(f, :template_inputs, { :partial => "template_inputs/form" }) %>
+        <%= f.fields_for :template_inputs do |ff| %>
+          <div class="template_input_form fields">
+            <%= render 'template_inputs/form', :f => ff %>
+          </div>
+        <% end %>
+        <%= add_child_link '+ ' + _("Add Input"), :template_inputs, { :title => _('add a input for this template')} unless @template.locked? %>
+      </div>
     </div>
 
     <div class="tab-pane" id="history">

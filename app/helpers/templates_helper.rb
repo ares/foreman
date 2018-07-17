@@ -46,4 +46,27 @@ module TemplatesHelper
 
     alert(:class => 'alert-warning', :text => warning_text.html_safe)
   end
+
+  def template_input_header(f, template)
+    header = _('Template input')
+    unless template.locked?
+      header += ' ' + remove_child_link('x', f, {:rel => 'twipsy', :'data-title' => _('remove template input'), :'data-placement' => 'left',
+                                                 :class => 'fr badge badge-danger'})
+    end
+    header.html_safe # rubocop:disable Rails/OutputSafety
+  end
+
+  def template_input_types_options
+    TemplateInput::TYPES.map { |key, name| [ _(name), key ] }
+  end
+
+  def advanced_switch_f(default_text, switch_text)
+    content_tag :div, :class => 'form-group' do
+      content_tag(:div, '', :class => 'col-md-2 control-label') +
+        content_tag(:div, :class => 'col-md-4') do
+          content_tag(:i, '', :class => 'fa fa-angle-right') + ' ' +
+            link_to(default_text, '#', :class => 'advanced_fields_switch', :'data-alternative-label' => switch_text)
+        end
+    end
+  end
 end

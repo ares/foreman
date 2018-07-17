@@ -2,18 +2,30 @@ class Template < ApplicationRecord
   include Exportable
   attr_accessor :modify_locked, :modify_default
 
+  has_many :template_inputs, :dependent => :destroy, :foreign_key => 'template_id', :autosave => true
+
+  accepts_nested_attributes_for :template_inputs, :allow_destroy => true
+
   validates_lengths_from_database
 
   validates :name, :presence => true
   validates :template, :presence => true
   validates :audit_comment, :length => {:maximum => 255}
   validate :template_changes, :if => ->(template) { (template.locked? || template.locked_changed?) && template.persisted? && !Foreman.in_rake? }
+  validate :inputs_unchanged_when_locked, :if => ->(template) { (template.locked? || template.locked_changed?) && template.persisted? && !Foreman.in_rake? }
+  validate do
+    begin
+      validate_unique_inputs!
+    rescue Foreman::Exception => e
+      errors.add :base, e.message
+    end
+  end
 
   before_destroy :check_if_template_is_locked
 
   before_save :remove_trailing_chars
 
-  attr_exportable :name, :snippet, :model => ->(template) { template.class.to_s }
+  attr_exportable :name, :snippet, :template_inputs, :model => ->(template) { template.class.to_s }
 
   class Jail < Safemode::Jail
     allow :name
@@ -153,6 +165,39 @@ class Template < ApplicationRecord
     Foreman::Renderer.render(source, scope)
   end
 
+  def dup
+    dup = super
+    self.template_inputs.each do |input|
+      dup.template_inputs.build input.attributes.except('template_id', 'id', 'created_at', 'updated_at')
+    end
+    dup
+  end
+
+  def validate_unique_inputs!
+    duplicated_inputs = template_inputs.group_by(&:name).values.select { |values| values.size > 1 }.map(&:first)
+    unless duplicated_inputs.empty?
+      raise NonUniqueInputsError.new(N_('Duplicated inputs detected: %{duplicated_inputs}'), :duplicated_inputs => duplicated_inputs.map(&:name))
+    end
+  end
+
+  def sync_inputs(inputs)
+    inputs ||= []
+    # Build a hash where keys are input names
+    inputs = inputs.inject({}) { |h, input| h.update(input['name'] => input) }
+
+    # Sync existing inputs
+    template_inputs.each do |existing_input|
+      if inputs.include?(existing_input.name)
+        existing_input.assign_attributes(inputs.delete(existing_input.name))
+      else
+        existing_input.mark_for_destruction
+      end
+    end
+
+    # Create new inputs
+    inputs.each_value { |new_input| template_inputs.build(new_input) }
+  end
+
   private
 
   # This method can be overridden in Template children classes to import additional attributes
@@ -161,6 +206,7 @@ class Template < ApplicationRecord
   # it can rely on self.template being updated and @importing_metadata to be populated with parsed
   # metadata
   def import_custom_data(_options)
+    sync_inputs(@importing_metadata['template_inputs'])
   end
 
   # Sets operatingsystem_ids of a template, it's used by provisioning template and ptable, which
@@ -249,6 +295,14 @@ class Template < ApplicationRecord
 
   def remove_trailing_chars
     self.template = template.tr("\r", '') if template.present?
+  end
+
+  def inputs_unchanged_when_locked
+    inputs_changed = template_inputs.any? { |input| input.changed? || input.new_record? }
+    foreign_input_sets_changed = foreign_input_sets.any? { |input_set| input_set.changed? || input_set.new_record? }
+    if inputs_changed || foreign_input_sets_changed
+      errors.add(:base, _('This template is locked. Please clone it to a new template to customize.'))
+    end
   end
 end
 

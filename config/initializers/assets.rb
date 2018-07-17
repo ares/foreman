@@ -44,6 +44,7 @@ Foreman::Application.configure do |app|
                   spice
                   charts
                   taxonomy_edit
+                  template_input
                   gettext/all
                   filters
                   class_edit

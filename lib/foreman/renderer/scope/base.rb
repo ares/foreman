@@ -7,18 +7,21 @@ module Foreman
         include Foreman::Renderer::Scope::Macros::TemplateLogging
         include Foreman::Renderer::Scope::Macros::SnippetRendering
 
-        def initialize(source:, host: nil, params: {}, variables: {}, mode: Foreman::Renderer::REAL_MODE)
+        delegate :template, :to => :source, :allow_nil => true
+
+        def initialize(source:, host: nil, params: {}, variables: {}, mode: Foreman::Renderer::REAL_MODE, template_input_values: nil)
+          raise "unsuported rendering mode '#{mode}'" unless AVAILABLE_RENDERING_MODES.include?(mode)
+
           @source = source
           @host = host
           @params = params
           @variables_keys = variables.keys
           @mode = mode
           @template_name = source.name
-          variables.each { |k, v| instance_variable_set("@#{k}", v) }
-          load_variables
+          @template_input_values = template_input_values
         end
 
-        attr_reader :host, :params, :variables_keys, :mode, :source
+        attr_reader :host, :params, :variables_keys, :mode, :source, :template_input_values
 
         def get_binding
           binding
