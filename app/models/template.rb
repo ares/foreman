@@ -138,6 +138,14 @@ class Template < ApplicationRecord
     template
   end
 
+  def acceptable_template_input_types
+    self.class.acceptable_template_input_types
+  end
+
+  def self.acceptable_template_input_types
+    TemplateInput::TYPES.keys
+  end
+
   # override in subclass to handle taxonomy scope, see TaxonomyCollisionFinder
   def self.find_without_collision(attribute, name)
     self.find_or_initialize_by :name => name

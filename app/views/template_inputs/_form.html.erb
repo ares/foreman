@@ -3,7 +3,7 @@
     <%= field_set_tag template_input_header(f, @template) do  %>
       <%= text_f f, :name, :disabled => @template.locked? %>
       <%= checkbox_f f, :required, :disabled => @template.locked? %>
-      <%= selectable_f f, :input_type, template_input_types_options, {}, :class => 'input_type_selector without_select2', :disabled => @template.locked? %>
+      <%= selectable_f f, :input_type, template_input_types_options(@template.acceptable_template_input_types), {}, :class => 'input_type_selector without_select2', :disabled => @template.locked? %>
       <div class="fact_input_type custom_input_type_fields" style="<%= f.object.fact_template_input? ? '' : 'display:none' %>">
         <%= text_f f, :fact_name, :class => 'fact_input_type', :required => true, :disabled => @template.locked? %>
       </div>

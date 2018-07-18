@@ -56,8 +56,9 @@ module TemplatesHelper
     header.html_safe # rubocop:disable Rails/OutputSafety
   end
 
-  def template_input_types_options
-    TemplateInput::TYPES.map { |key, name| [ _(name), key ] }
+  def template_input_types_options(keys = TemplateInput::TYPES.keys)
+    keys.map!(&:to_s)
+    TemplateInput::TYPES.select { |k, _| keys.include?(k.to_s) }.map { |key, name| [ _(name), key ] }
   end
 
   def advanced_switch_f(default_text, switch_text)

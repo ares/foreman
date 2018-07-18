@@ -233,6 +233,10 @@ class ProvisioningTemplate < Template
     setting.value == name
   end
 
+  def self.acceptable_template_input_types
+    [ :fact, :variable, :puppet_parameter ]
+  end
+
   private
 
   def import_custom_data(options)
