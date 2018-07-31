@@ -1,0 +1,26 @@
+<% javascript 'template_input' %>
+
+<% title _("Generate a Report") %>
+
+<%= form_for :report_template_report, url: schedule_report_report_template_path(@template) do |f| %>
+
+  <%= f.fields_for :input_values do |input_values_fields| %>
+    <% inputs = @template.template_inputs.select {|input| input.input_type == 'user'} %>
+
+    <% inputs.select(&:basic?).each do |input| %>
+      <%= render :partial => 'template_inputs/invocation_form', :locals => {:input_values_fields => input_values_fields, :composer => @composer, :input => input} %>
+    <% end %>
+
+    <% if inputs.any?(&:advanced?) %>
+      <%= advanced_switch_f _('Display advanced fields'), _('Hide advanced fields') %>
+
+      <div class="advanced hidden">
+        <% inputs.select(&:advanced).each do |input| %>
+          <%= render :partial => 'template_inputs/invocation_form', :locals => {:input_values_fields => input_values_fields, :composer => @composer, :input => input} %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%= submit_or_cancel f, false, { data: { disable_with: false } } %>
+<% end %>

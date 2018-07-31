@@ -117,18 +117,18 @@ class TemplateInput < ApplicationRecord
     end
 
     def resolved_value
-      input_value.try(:value)
+      input_value
     end
 
     private
 
     def required_value_needed?
-      @input.required? && input_value.try(:value).blank?
+      @input.required? && input_value.blank?
     end
 
     def input_value
       return unless @scope.template_input_values.key?(@input.name)
-      @scope[@input.name]
+      @scope.template_input_values[@input.name]
     end
   end
 

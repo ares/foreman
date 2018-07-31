@@ -9,7 +9,7 @@ module Foreman
 
         delegate :template, :to => :source, :allow_nil => true
 
-        def initialize(source:, host: nil, params: {}, variables: {}, mode: Foreman::Renderer::REAL_MODE, template_input_values: nil)
+        def initialize(source:, host: nil, params: {}, variables: {}, mode: Foreman::Renderer::REAL_MODE, template_input_values: {})
           raise "unsuported rendering mode '#{mode}'" unless AVAILABLE_RENDERING_MODES.include?(mode)
 
           @source = source

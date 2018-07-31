@@ -269,6 +269,7 @@ module FormHelper
     options[:disabled] = true if args[:disabled]
     options[:class] = "btn btn-#{overwrite ? 'danger' : 'primary'} remove_form_templates"
     options[:'data-id'] = form_to_submit_id(f) unless options.has_key?(:'data-id')
+    options[:data] = args[:data] if args.key?(:data)
     options
   end
 

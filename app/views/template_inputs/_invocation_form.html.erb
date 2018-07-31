@@ -1,4 +1,4 @@
-<%= input_values_fields.fields_for input.id.to_s, composer.template_invocation_input_value_for(job_template, input) do |input_fields| %>
+<%= input_values_fields.fields_for input.id.to_s, composer.input_value_for(input) do |input_fields| %>
   <% unless input.options.blank? %>
     <%= selectable_f input_fields, :value, input.options_array, { :include_blank => !input.required }, :label_help => input.description, :require => input.required, :label => input.name, :id => input.name, :onchange => "regenerate_description(this);" %>
   <% else %>
