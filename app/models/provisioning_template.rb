@@ -240,6 +240,7 @@ class ProvisioningTemplate < Template
   private
 
   def import_custom_data(options)
+    super
     self.template_kind = nil if self.snippet
 
     if @importing_metadata.key?('kind') && !self.snippet && associate_metadata_on_import?(options)

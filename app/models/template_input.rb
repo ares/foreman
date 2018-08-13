@@ -13,8 +13,6 @@ class TemplateInput < ApplicationRecord
                   :puppet_parameter_name, :description, :options, :advanced)
 
   belongs_to :template
-  # TODO also need to be converted including template_invocations
-  # has_many :template_invocation_input_values, :dependent => :destroy
 
   scoped_search :on => :name, :complete_value => true
   scoped_search :on => :input_type, :complete_value => true

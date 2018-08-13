@@ -83,6 +83,7 @@ class Ptable < Template
   private
 
   def import_custom_data(options)
+    super
     import_oses(options)
 
     self.os_family = self.operatingsystems.first.family if self.operatingsystem_ids.present?
