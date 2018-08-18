@@ -18,6 +18,8 @@ module Foreman
           @variables_keys = variables.keys
           @mode = mode
           @template_name = source.name
+          variables.each { |k, v| instance_variable_set("@#{k}", v) }
+          load_variables
           @template_input_values = template_input_values
         end
 
