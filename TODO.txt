@@ -1,3 +1,7 @@
 API
 Tests
+ * copy relevant ones from REX
+ * new composer tests
+ * report integration test?
+ * export tests contain also template_inputs, the same for importing
 Make REX compatible

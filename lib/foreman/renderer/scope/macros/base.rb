@@ -92,7 +92,7 @@ module Foreman
           end
 
           def input(name)
-            input = template.template_inputs.find_by_name(name)
+            input = template.template_inputs&.find_by_name(name)
             if input
               preview? ? input.preview(self) : input.value(self)
             else
