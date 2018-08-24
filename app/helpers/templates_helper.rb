@@ -53,7 +53,7 @@ module TemplatesHelper
       header += ' ' + remove_child_link('x', f, {:rel => 'twipsy', :'data-title' => _('remove template input'), :'data-placement' => 'left',
                                                  :class => 'fr badge badge-danger'})
     end
-    header.html_safe # rubocop:disable Rails/OutputSafety
+    header.html_safe
   end
 
   def template_input_types_options(keys = TemplateInput::TYPES.keys)

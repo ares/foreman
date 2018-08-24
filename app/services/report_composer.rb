@@ -24,7 +24,7 @@ class ReportComposer
     end
 
     def blank_to_nil(thing)
-      thing.blank? ? nil : thing
+      thing.presence
     end
 
     def report_base_params
@@ -71,5 +71,4 @@ class ReportComposer
   def load_report_template(id)
     ReportTemplate.authorized(:generate_report_template).find_by_id(id)
   end
-
 end

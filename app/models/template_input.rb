@@ -104,7 +104,6 @@ class TemplateInput < ApplicationRecord
   end
 
   class UserInputResolver < InputResolver
-
     def value
       raise(UnsatisfiedRequiredInput, _("Value for required input '%s' was not specified") % @input.name) if required_value_needed?
       super
@@ -149,7 +148,7 @@ class TemplateInput < ApplicationRecord
 
   class VariableInputResolver < InputResolver
     def ready?
-      @scope.host && @scope.host.params.key?(@input.variable_name)
+      @scope&.host&.params&.key?(@input.variable_name)
     end
 
     def resolved_value
@@ -172,11 +171,7 @@ class TemplateInput < ApplicationRecord
     private
 
     def get_enc
-      @enc ||= if SETTINGS[:version].short <= '1.15'
-                 Classification::ClassParam.new(:host => @scope.host).enc
-               else
-                 HostInfoProviders::PuppetInfo.new(@scope.host).puppetclass_parameters
-               end
+      @enc ||= HostInfoProviders::PuppetInfo.new(@scope.host).puppetclass_parameters
     end
   end
 end
