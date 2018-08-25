@@ -14,21 +14,36 @@ class ReportComposer
 
   class UiParams
     attr_reader :ui_params
+
     def initialize(ui_params)
       @ui_params = ui_params.permit!
     end
 
     def params
       { :template_id => ui_params[:id],
-        :input_values => report_base_params[:input_values]}.with_indifferent_access
-    end
-
-    def blank_to_nil(thing)
-      thing.presence
+        :input_values => report_base_params[:input_values] }.with_indifferent_access
     end
 
     def report_base_params
       ui_params[:report_template_report] || {}.with_indifferent_access
+    end
+  end
+
+  class ApiParams
+    attr_reader :api_params
+
+    def initialize(api_params)
+      @api_params = api_params.permit!
+    end
+
+    def params
+      { :template_id => api_params[:id],
+        :input_values => convert_input_names_to_ids(api_params[:id], api_params[:input_values] || {}) }.with_indifferent_access
+    end
+
+    def convert_input_names_to_ids(template_id, input_values)
+      inputs = TemplateInput.where(:template_id => template_id, :name => input_values.keys)
+      Hash[inputs.map { |i| [ i.id.to_s, 'value' => input_values[i.name] ] }]
     end
   end
 
@@ -40,6 +55,10 @@ class ReportComposer
 
   def self.from_ui_params(ui_params)
     self.new(UiParams.new(ui_params).params)
+  end
+
+  def self.from_api_params(api_params)
+    self.new(ApiParams.new(api_params).params)
   end
 
   def build_inputs(template, input_values)
