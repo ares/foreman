@@ -164,6 +164,10 @@ Foreman::Application.routes.draw do
         resources :environments, :only => [:index, :show]
       end
 
+      resources :templates, :only => :none do
+        resources :template_inputs, :only => [:index, :show, :create, :destroy, :update]
+      end
+
       resources :ptables, :except => [:new, :edit] do
         (resources :locations, :only => [:index, :show]) if SETTINGS[:locations_enabled]
         (resources :organizations, :only => [:index, :show]) if SETTINGS[:organizations_enabled]
