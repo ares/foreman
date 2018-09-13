@@ -65,8 +65,8 @@ class ReportComposer
     inputs = {}.with_indifferent_access
     return inputs if template.nil?
 
-    # process values from params
-    if input_values.present?
+    # process values from params (including empty hash)
+    unless input_values.nil?
       @template.template_inputs.each do |input|
         inputs[input.id.to_s] = InputValue.new(value: input_values[input.id.to_s].try(:[], 'value'), template_input: input)
       end
@@ -77,6 +77,18 @@ class ReportComposer
 
   def valid?
     super & @input_values.map { |_, input_value| input_value.valid? }.all?
+  end
+
+  def errors
+    errors = super.dup
+
+    @input_values.each do |id, input_value|
+      input_value.errors.full_messages.each do |message|
+        errors.add :base, _("Input %s: " % input_value.template_input.name) + message
+      end
+    end
+
+    errors
   end
 
   def template_input_values

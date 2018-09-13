@@ -113,6 +113,7 @@ module Api
           response = @report_template.render(params: params, template_input_values: @composer.template_input_values)
           send_data response, :filename => @report_template.suggested_report_name.to_s
         else
+          @report_template = @composer
           process_resource_error :resource => @composer
         end
       rescue => e

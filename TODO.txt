@@ -1,6 +1,7 @@
 Tests
  * new composer tests
  * report integration test?
- * export tests contain also template_inputs, the same for importing
-Make REX compatible - most done, need more tests
-Test for generate API - functional
+Make REX compatible - most done, need more manual tests
+improve UI for empty screens
+separate to files
+introduce new scope for reports or see comments in PR

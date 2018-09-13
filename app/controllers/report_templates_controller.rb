@@ -19,8 +19,8 @@ class ReportTemplatesController < TemplatesController
       if response.status < 400
         headers["Cache-Control"] = "no-cache"
         headers["Content-Disposition"] = %(attachment; filename="#{@template.suggested_report_name}")
-        return
       end
+      return
     end
 
     error _('Could not generate the report, check the form for error messages'), :now => true
