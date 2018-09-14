@@ -1,4 +1,4 @@
-<% javascript 'template_input' %>
+<%= javascript_tag("$(document).on('ContentLoad', tfm.templateInputs.initTypeChanges)"); %>
 
 <% url = if @template.persisted?
            public_send("#{@type_name_singular}_path", :id => @template)

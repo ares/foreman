@@ -3,5 +3,3 @@ Tests
  * report integration test?
 Make REX compatible - most done, need more manual tests
 improve UI for empty screens
-separate to files
-introduce new scope for reports or see comments in PR

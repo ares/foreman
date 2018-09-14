@@ -398,7 +398,9 @@ function reloadOnAjaxComplete(element) {
   tfm.tools.hideSpinner()
   tfm.tools.activateTooltips();
   activate_select2(':root');
-  tfm.numFields.initAll()
+  tfm.numFields.initAll();
+  tfm.templateInputs.initAdvancedFields()
+  tfm.templateInputs.initTypeChanges()
 }
 
 function set_fullscreen(element){
