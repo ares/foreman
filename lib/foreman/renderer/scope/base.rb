@@ -9,7 +9,7 @@ module Foreman
 
         delegate :template, :to => :source, :allow_nil => true
 
-        def initialize(source:, host: nil, params: {}, variables: {}, mode: Foreman::Renderer::REAL_MODE, template_input_values: {})
+        def initialize(source:, host: nil, params: {}, variables: {}, mode: Foreman::Renderer::REAL_MODE)
           raise "unsuported rendering mode '#{mode}'" unless AVAILABLE_RENDERING_MODES.include?(mode)
 
           @source = source
@@ -20,10 +20,9 @@ module Foreman
           @template_name = source.name
           variables.each { |k, v| instance_variable_set("@#{k}", v) }
           load_variables
-          @template_input_values = template_input_values
         end
 
-        attr_reader :host, :params, :variables_keys, :mode, :source, :template_input_values
+        attr_reader :host, :params, :variables_keys, :mode, :source
 
         def get_binding
           binding

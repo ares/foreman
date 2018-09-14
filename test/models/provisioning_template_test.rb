@@ -291,4 +291,3 @@ class ProvisioningTemplateTest < ActiveSupport::TestCase
     end
   end
 end
-
