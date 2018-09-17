@@ -401,6 +401,16 @@ module FormHelper
     end
   end
 
+  def advanced_switch_f(default_text, switch_text)
+    content_tag :div, :class => 'form-group' do
+      content_tag(:div, '', :class => 'col-md-2 control-label') +
+        content_tag(:div, :class => 'col-md-4') do
+          content_tag(:i, '', :class => 'fa fa-angle-right') + ' ' +
+            link_to(default_text, '#', :class => 'advanced_fields_switch', :'data-alternative-label' => switch_text)
+        end
+    end
+  end
+
   private
 
   def link_to_add_fields_classes(options = {})

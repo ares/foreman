@@ -1,5 +1,7 @@
 module InputResolver
   class Base
+    attr_reader :input, :scope
+
     def initialize(input, scope)
       @input = input
       @scope = scope

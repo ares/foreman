@@ -18,21 +18,3 @@ function updateVisibilityAfterInputTypeChange(select) {
   fieldset.find('div.custom_input_type_fields').hide();
   fieldset.find('div.' + select.val() + '_input_type').show();
 }
-
-export function initAdvancedFields() {
-  $('a.advanced_fields_switch').each(function () {
-    const field = $(this);
-    field.on('click', updateAdvancedFields)
-  })
-}
-
-function updateAdvancedFields() {
-  const switcher = $('a.advanced_fields_switch');
-  const original = switcher.html();
-  switcher.html(switcher.data('alternativeLabel'));
-  switcher.data('alternativeLabel', original);
-
-  switcher.siblings('i').toggleClass('fa-angle-right').toggleClass('fa-angle-down');
-
-  $('div.advanced').toggle()
-}
