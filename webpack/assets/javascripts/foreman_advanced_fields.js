@@ -1,10 +1,11 @@
+/* eslint-disable func-names */
 import $ from 'jquery';
 
 export function initAdvancedFields() {
   $('a.advanced_fields_switch').each(function () {
     const field = $(this);
-    field.on('click', updateAdvancedFields)
-  })
+    field.on('click', updateAdvancedFields);
+  });
 }
 
 function updateAdvancedFields() {
@@ -15,5 +16,5 @@ function updateAdvancedFields() {
 
   switcher.siblings('i').toggleClass('fa-angle-right').toggleClass('fa-angle-down');
 
-  $('div.advanced').toggle()
+  $('div.advanced').toggle();
 }
