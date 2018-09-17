@@ -1,7 +1,7 @@
 module InputResolver
   class UserInputResolver < Base
     def value
-      raise(UnsatisfiedRequiredInput, _("Value for required input '%s' was not specified") % @input.name) if required_value_needed?
+      raise(TemplateInput::UnsatisfiedRequiredInput, _("Value for required input '%s' was not specified") % @input.name) if required_value_needed?
       super
     end
 

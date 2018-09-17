@@ -12,7 +12,7 @@ module InputResolver
     end
 
     def value
-      ready? ? resolved_value : raise(ValueNotReady, "Input '#{@input.name}' is not ready for rendering")
+      ready? ? resolved_value : raise(TemplateInput::ValueNotReady, "Input '#{@input.name}' is not ready for rendering")
     end
 
     def preview_value

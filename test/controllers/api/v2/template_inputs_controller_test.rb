@@ -4,7 +4,7 @@ module Api
   module V2
     class TemplateInputsControllerTest < ActionController::TestCase
       setup do
-        @template = FactoryBot.create(:job_template, :with_input)
+        @template = FactoryBot.create(:report_template, :with_input)
         @input = @template.template_inputs.first
       end
 
