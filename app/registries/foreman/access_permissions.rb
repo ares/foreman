@@ -118,7 +118,7 @@ Foreman::AccessControl.map do |permission_set|
                                         :"api/v2/config_templates" => [:update],
                                         :"api/v2/provisioning_templates" => [:update, :import],
                                         :"api/v2/template_combinations" => [:update],
-                                        :'api/v2/template_inputs' => [:create, :update, :destroy],
+                                        :'api/v2/template_inputs' => [:create, :update, :destroy]
                                       }
     map.permission :destroy_provisioning_templates, {:provisioning_templates => [:destroy],
                                         :"api/v2/config_templates" => [:destroy],
