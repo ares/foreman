@@ -1,5 +1,7 @@
 Tests
  * new composer tests
  * report integration test?
+ * report definition integration test
 Make REX compatible - most done, need more manual tests
 improve UI for empty screens
+bring over https://github.com/theforeman/foreman_remote_execution/pull/387

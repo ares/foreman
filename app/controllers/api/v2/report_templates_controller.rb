@@ -114,7 +114,7 @@ module Api
           send_data response, :filename => @report_template.suggested_report_name.to_s
         else
           @report_template = @composer
-          process_resource_error :resource => @composer
+          process_resource_error
         end
       rescue => e
         render_error 'standard_error', :status => :internal_error, :locals => { :exception => e }

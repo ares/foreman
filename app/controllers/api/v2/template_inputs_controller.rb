@@ -19,7 +19,8 @@ module Api
       api :GET, '/templates/:template_id/template_inputs/:id', N_('Show template input details')
       param :template_id, :identifier, :required => true
       param :id, :identifier, :required => true
-      def show; end
+      def show
+      end
 
       def_param_group :template_input do
         param :template_input, Hash, :required => true, :action_aware => true do
@@ -56,7 +57,7 @@ module Api
       param :id, :identifier, :required => true
       param_group :template_input
       def update
-        process_response @template_input.update_attributes(template_input_params)
+        process_response @template_input.update(template_input_params)
       end
 
       def resource_name(nested_resource = nil)

@@ -47,7 +47,7 @@ module Api
     rescue_from Foreman::MaintenanceException, :with => :service_unavailable
 
     def get_resource(message = "Couldn't find resource")
-      instance_variable_get(:"@#{resource_name}") || @processed_resource || raise(message)
+      instance_variable_get(:"@#{resource_name}") || raise(message)
     end
 
     def controller_permission
@@ -132,13 +132,14 @@ module Api
     end
 
     def process_resource_error(options = { })
-      @processed_resource = options[:resource] || get_resource(options[:message])
-      raise 'resource have no errors' if @processed_resource.errors.empty?
+      resource = options[:resource] || get_resource(options[:message])
 
-      if @processed_resource.respond_to?(:permission_failed?) && @processed_resource.permission_failed?
+      raise 'resource have no errors' if resource.errors.empty?
+
+      if resource.respond_to?(:permission_failed?) && resource.permission_failed?
         deny_access
       else
-        log_resource_errors @processed_resource
+        log_resource_errors resource
         render_error 'unprocessable_entity', :status => :unprocessable_entity
       end
     end

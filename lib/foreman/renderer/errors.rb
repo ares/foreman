@@ -36,7 +36,7 @@ module Foreman
       end
 
       class UndefinedInput < RenderingError
-        MESSAGE = 'Rendering failed, no input with name "%{s}" for input macro found'.freeze
+        MESSAGE = N_('Rendering failed, no input with name "%{s}" for input macro found').freeze
       end
     end
   end

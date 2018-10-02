@@ -7,11 +7,13 @@ class ReportTemplatesController < TemplatesController
   end
 
   def generate
+    # can't user before_action :find_resource since it would override the definition from parent TemplatesController
     find_resource
     @composer = ReportComposer.from_ui_params(params)
   end
 
   def schedule_report
+    # can't user before_action :find_resource since it would override the definition from parent TemplatesController
     find_resource
     @composer = ReportComposer.from_ui_params(params)
     if @composer.valid?

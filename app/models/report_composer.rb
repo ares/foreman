@@ -84,7 +84,7 @@ class ReportComposer
 
     @input_values.each do |id, input_value|
       input_value.errors.full_messages.each do |message|
-        errors.add :base, _("Input %s: " % input_value.template_input.name) + message
+        errors.add :base, (_("Input %s: ") % input_value.template_input.name) + message
       end
     end
 

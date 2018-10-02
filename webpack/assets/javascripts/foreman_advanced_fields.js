@@ -14,7 +14,7 @@ function updateAdvancedFields() {
   switcher.html(switcher.data('alternativeLabel'));
   switcher.data('alternativeLabel', original);
 
-  switcher.siblings('i').toggleClass('fa-angle-right').toggleClass('fa-angle-down');
+  switcher.siblings('i.fa').toggleClass('fa-angle-right').toggleClass('fa-angle-down');
 
   $('div.advanced').toggle();
 }

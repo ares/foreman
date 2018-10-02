@@ -501,13 +501,12 @@ EOS
       it 'is importable' do
         erb
         old_name = exportable_template.name
-        exportable_template.update_attributes(:name => "#{old_name}_renamed")
+        exportable_template.update(:name => "#{old_name}_renamed")
 
         imported = ProvisioningTemplate.import!(old_name, erb)
         assert_equal old_name, imported.name
         assert_equal exportable_template.template_inputs.first.to_export, imported.template_inputs.first.to_export
       end
-
     end
   end
 end
