@@ -38,3 +38,9 @@ export const generateTemplate = (url, templateInputData) => {
 export const pollReportData = url => {
   store.dispatch(TemplateActions.pollReportData(url));
 };
+
+export const inputValueOnchange = valueType => {
+  if (valueType.value === 'search') {
+    $('.resource-type').show();
+  } else $('.resource-type').hide();
+};
