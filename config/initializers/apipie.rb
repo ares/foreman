@@ -2,7 +2,11 @@ require 'find'
 
 ApipieDSL.configure do |config|
   config.app_name = 'Foreman'
-  config.app_info = 'blabla'
+  config.app_info = 'The Foreman is aimed to be a single address for all machines life cycle management.'
+  config.dsl_base_url = '/dsl'
+  config.doc_base_url = '/dsldoc'
+  config.markup = Apipie::Markup::Markdown.new if Rails.env.development? && defined? Maruku
+  config.default_version = 'v1'
   config.dsl_classes_matchers = [
     "#{Rails.root}/lib/foreman/renderer/**/*.rb"
   ]
