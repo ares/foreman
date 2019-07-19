@@ -6,7 +6,7 @@ ApipieDSL.configure do |config|
   config.dsl_base_url = '/dsl'
   config.doc_base_url = '/dsldoc'
   config.markup = Apipie::Markup::Markdown.new if Rails.env.development? && defined? Maruku
-  config.default_version = 'v1'
+  config.default_version = 'Template Writing Documentation'
   config.dsl_classes_matchers = [
     "#{Rails.root}/lib/foreman/renderer/**/*.rb"
   ]

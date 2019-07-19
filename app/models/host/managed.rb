@@ -1,4 +1,11 @@
 class Host::Managed < Host::Base
+  extend ApipieDSL::Class
+
+  # FIXME needs to give it a custom label - Host::Managed
+  apipie :class, desc: 'Host::Managed' do
+    property :name, String, desc: 'Host FQDN'
+  end
+
   # audit the changes to this model
   audited :except => [:last_report, :last_compile, :lookup_value_matcher, :global_status]
   has_associated_audits
