@@ -1,15 +1,27 @@
 require 'find'
 
 ApipieDSL.configure do |config|
+  config.default_version = 'v1'
   config.app_name = 'Foreman'
   config.app_info = 'The Foreman is aimed to be a single address for all machines life cycle management.'
   config.dsl_base_url = '/dsl'
   config.doc_base_url = '/dsldoc'
-  config.markup = Apipie::Markup::Markdown.new if Rails.env.development? && defined? Maruku
-  config.default_version = 'Template Writing Documentation'
+  config.markup = ApipieDSL::Markup::Markdown.new if Rails.env.development? && defined? Maruku
   config.dsl_classes_matchers = [
     "#{Rails.root}/lib/foreman/renderer/**/*.rb"
   ]
+  config.sections = %w[all report_templates job_templates additional]
+  config.languages = ENV['FOREMAN_APIPIE_LANGS'].try(:split, ' ') || FastGettext.available_locales
+  config.default_locale = FastGettext.default_locale
+  config.locale = ->(loc) { loc ? FastGettext.set_locale(loc) : FastGettext.locale }
+
+  config.translate = lambda do |str, loc|
+    old_loc = FastGettext.locale
+    FastGettext.set_locale(loc)
+    trans = _(str) if str
+    FastGettext.set_locale(old_loc)
+    trans
+  end
 end
 
 Apipie.configure do |config|

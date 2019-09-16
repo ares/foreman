@@ -1,8 +1,10 @@
 class Host::Managed < Host::Base
   extend ApipieDSL::Class
 
-  # FIXME needs to give it a custom label - Host::Managed
-  apipie :class, desc: 'Host::Managed' do
+  apipie :class, 'Host::Managed' do
+    name 'Host::Managed'
+    sections only: %w[all additional]
+    refs 'Host', 'Host::Managed'
     property :name, String, desc: 'Host FQDN'
   end
 
