@@ -4,10 +4,7 @@ ApipieDSL.configure do |config|
   config.default_version = 'v1'
   config.app_name = 'Foreman'
   config.app_info = 'The Foreman is aimed to be a single address for all machines life cycle management.'
-  config.doc_base_url = '/templates_dsl'
-  config.debug = true
-  config.default_version = 'Template Writing Documentation'
-  config.class_full_names = true
+  config.doc_base_url = '/templates_doc'
   config.markup = ApipieDSL::Markup::Markdown.new if Rails.env.development? && defined? Maruku
   config.dsl_classes_matchers = [
     "#{Rails.root}/lib/foreman/renderer/**/*.rb"
@@ -24,6 +21,7 @@ ApipieDSL.configure do |config|
     FastGettext.set_locale(old_loc)
     trans
   end
+  config.help_layout = 'apipie_dsl/apipie_dsls/help.html.erb'
 end
 
 Apipie.configure do |config|
