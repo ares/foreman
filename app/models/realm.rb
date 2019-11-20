@@ -2,6 +2,7 @@ class Realm < ApplicationRecord
   extend ApipieDSL::Class
 
   apipie :class, desc: 'TODO A class representing a realm object' do
+    sections only: %w[all additional]
     property :name, String, desc: 'Name of the realm'
   end
   audited

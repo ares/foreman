@@ -12,7 +12,8 @@ module Foreman
           delegate :medium_uri, to: :medium_provider
 
           apipie :class, 'Base macros to use within a template' do
-            sections only: %w[all report_templates]
+            name 'Base'
+            sections only: %w[all reports provisioning jobs]
           end
 
           apipie :param_group, name: :load_resource_keywords do
@@ -209,7 +210,7 @@ module Foreman
           end
 
           apipie :method, 'Returns hash representing all statuses for a given host' do
-            required :host, Host::Managed, desc: "A host object to get the statuses for"
+            required :host, 'Host::Managed', desc: "A host object to get the statuses for"
             returns object_of: Hash, desc: "Hash representing all statuses for a given host"
             example 'all_host_statuses(@host) # => {"Addons"=>0, "Build"=>1, "Compliance"=>0, "Configuration"=>0, "Errata"=>0, "Execution"=>1, "Role"=>0, "Service Level"=>0, "Subscription"=>0, "System Purpose"=>0, "Traces"=>0, "Usage"=>0}'
             example "<%- load_hosts.each_record do |host| -%>\n<%= host.name -%>, <%=   all_host_statuses(host)['Subscription'] %>\n<%- end -%>"
@@ -221,7 +222,7 @@ module Foreman
           apipie :method, 'Returns a specific status for a given host' do
             desc "The return value is a human readable representation of the status.
               For details about the number meaning, see documentation for every status class."
-            required :host, Host::Managed, desc: "a host object for which the status will be checked"
+            required :host, 'Host::Managed', desc: "a host object for which the status will be checked"
             required :name, HostStatus.status_registry.to_a.map(&:status_name).sort, desc: "name of the host substatus to be checked"
             returns String, desc: 'A human readable, textual represenation of the status for a given host'
             example 'host_status(@host, "Subscription") # => "Fully entitled"'
@@ -274,7 +275,7 @@ module Foreman
           apipie :method, 'Returns a kernel release installed on a host based on facts reported by facters' do
             desc "Given this is based on facts, if it's rendered for multiple hosts in a single template rendering,
               it's advised to preload `kernel_release` association, see an example below."
-            required :host, Host::Managed, desc: 'host object for which kernel released is returned'
+            required :host, 'Host::Managed', desc: 'host object for which kernel released is returned'
             returns String, desc: 'String describing the kernel release'
             example 'host_kernel_release(host) # => "3.10.0-957.10.1.el7.x86_6"'
             example "<%- load_hosts(preload: :kernel_release).each_record do |host| -%>\n<%=   host.name -%>, <%=  host_kernel_release(host) %>\n<%- end -%>"
@@ -287,7 +288,7 @@ module Foreman
             desc "Given this is based on  e.g. reports from pupept agent, ansible runs or subscription managers
               the value is only updated on incoming report and can be inaccurate and out of date. An example
               scenario for such situation is when host reboots but puppet agent hasn't sent new facts yet."
-            required :host, Host::Managed, desc: 'host object for which the uptime is returned'
+            required :host, 'Host::Managed', desc: 'host object for which the uptime is returned'
             returns one_of: [Integer, nil], desc: 'Number representing uptime in seconds or nil in case, there is no information about host boot time'
             example 'host_uptime_seconds(host) # => 2670619'
             example 'host_uptime_seconds(host) # => nil'

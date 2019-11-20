@@ -2,13 +2,18 @@ module Foreman
   module Renderer
     module Scope
       class Report < Foreman::Renderer::Scope::Template
+        extend ApipieDSL::Class
+
+        apipie :class, desc: 'Report' do
+          name 'Report'
+          sections only: %w[all reports]
+        end
+
         def initialize(**args)
           super
           @report_data = []
           @report_headers = []
         end
-
-        extend ApipieDSL::Class
 
         # FIXME returns one_of: [:csv, :yaml] does not work
         apipie :method, desc: "Render a report for all rows defined" do
@@ -36,7 +41,7 @@ module Foreman
         def report_headers(*headers)
           @report_headers = headers.map(&:to_s)
         end
-        
+
         apipie :method, desc: "Register a row of data for the report" do
           # long_description: "For every record that should be part of the report, +report_row+ macro needs to be called.
           # The only argument it accepts is a record definition. This is typically called in some +each+ loop. Calling

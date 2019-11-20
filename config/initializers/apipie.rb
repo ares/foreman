@@ -9,7 +9,7 @@ ApipieDSL.configure do |config|
   config.dsl_classes_matchers = [
     "#{Rails.root}/lib/foreman/renderer/**/*.rb"
   ]
-  config.sections = %w[all report_templates job_templates additional]
+  config.sections = %w[all provisioning reports jobs additional]
   config.languages = ENV['FOREMAN_APIPIE_LANGS'].try(:split, ' ') || FastGettext.available_locales
   config.default_locale = FastGettext.default_locale
   config.locale = ->(loc) { loc ? FastGettext.set_locale(loc) : FastGettext.locale }

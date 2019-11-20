@@ -80,7 +80,7 @@ module HostCommon
     @medium_provider ||= Foreman::Plugin.medium_providers.find_provider(self)
   end
 
-  apipie :method, desc: "Returns a url pointing to boot file" do
+  apipie :method, 'Returns a url pointing to boot file' do
     required :file, Symbol, desc: "File type to download from installation media associated with the host operating system. Accepted file types are based on host operating system, e.g. :kernel, :initrd"
     returns String, desc: 'the url for fetching the file'
     example "url_for_boot(:kernel) # => 'http://dl.fedoraproject.org/pub/fedora/linux/releases/29/Server/x86_64/os//images/pxeboot/vmlinuz'"

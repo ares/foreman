@@ -2,6 +2,12 @@ module Host
   class Base < ApplicationRecord
     extend ApipieDSL::Class
 
+    apipie :class, 'A class representing base host object' do
+      name 'Host'
+      sections only: %w[all additional]
+      refs 'Host'
+    end
+
     KERNEL_RELEASE_FACTS = [ 'kernelrelease', 'ansible_kernel', 'kernel::release' ]
 
     prepend Foreman::STI
@@ -253,9 +259,8 @@ module Host
       self.reported_data || self.build_reported_data
     end
 
-    # FIXME Hash can't be used in returns
     apipie :method, desc: 'A list of facts known about the host. Note that available facts depend on what facts have been uploaded to Formean, typical sources are Puppet facter, subscription manager etc. The facts can be out of date, this macro only provides access to the value stored in the database.' do
-      returns Object, desc: 'A hash of facts, keys are fact names, values are fact values'
+      returns Hash, desc: 'A hash of facts, keys are fact names, values are fact values'
       example '@host.facts # => { "hardwareisa"=>"x86_64", "kernel"=>"Linux", "virtual"=>"physical", ... }', desc: 'Getting all host facts'
       example '@host.facts["uptime"] # => "30 days"', desc: 'Getting specific fact value, +uptime+ in this caes'
     end

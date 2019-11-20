@@ -5,9 +5,8 @@ module Foreman
         module SnippetRendering
           extend ApipieDSL::Module
 
-          # FIXME need a long decription
-          apipie :method, desc: "Renders a snippet if it exists in template source, e.g. database" do
-            # long_description: "Same to snippet but does not fail and continues the main rendering if the given snippet was not found" do
+          apipie :method, 'Renders a snippet if it exists in template source, e.g. database' do
+            desc 'Same to snippet but does not fail and continues the main rendering if the given snippet was not found'
             required :name, String, desc: 'Name of the snippet template to render'
             optional :options, Hash, desc: 'The only supported key is +variables+, which can contain a Hash. Every key of such Hash will be registered as instance variable, e.g. key +enable_ntp+ will be available as +@enable_ntp+'
             returns String, desc: 'evaluated ERB of the snippet'
@@ -25,15 +24,15 @@ module Foreman
             snippet(file.gsub(/^_/, ''), options)
           end
 
-          apipie :method, desc: "Renders a string, which is a result of rendering other template snippet" do
-            # long_description: "Main templates can share common logic in so call snippets. For example puppet agent
-            # configuration is done the same way in Kickstart and Preseed templates, hence is extracted to puppet_setup
-            # snippet. Using +snippet+ macro, this can be rendered into a main template. Snippets can render other
-            # snippets. Also same snippet can be rendered multiple times. This can be useful if the snippet is
-            # parametrized using variables.
-            # The snippet rendering happens in the same context as the main template rendering, meaning all instance
-            # variables and macros are available in that snippet. Variables passed to this snippet are available
-            # only during the snippet rendering." do
+          apipie :method, 'Renders a string, which is a result of rendering other template snippet' do
+            desc 'Main templates can share common logic in so call snippets. For example puppet agent
+              configuration is done the same way in Kickstart and Preseed templates, hence is extracted to puppet_setup
+              snippet. Using +snippet+ macro, this can be rendered into a main template. Snippets can render other
+              snippets. Also same snippet can be rendered multiple times. This can be useful if the snippet is
+              parametrized using variables.
+              The snippet rendering happens in the same context as the main template rendering, meaning all instance
+              variables and macros are available in that snippet. Variables passed to this snippet are available
+              only during the snippet rendering.'
             required :name, String, desc: 'Name of the snippet template to render'
             optional :options, Hash, desc: 'Rendering options, the only supported option is +variables+ which can also be set by specific keyword argument'
             optional :variables, Hash, desc: 'Every key will be registered as instance variable, e.g. key +enable_ntp+ will be available as +@enable_ntp+'

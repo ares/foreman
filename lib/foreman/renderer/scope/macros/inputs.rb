@@ -6,7 +6,6 @@ module Foreman
           extend ApipieDSL::Module
           include Foreman::Renderer::Errors
 
-          # FIXME seems to be ignored
           apipie :method, desc: "Loads the information from input",
                  long_description: "Every template can be parametrized with inputs. Input needs to be explicitly defined
                    and can be of various type. During the rendering all required inputs needs to be fed with the value.

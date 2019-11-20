@@ -6,6 +6,7 @@ class Ptable < Template
   extend ApipieDSL::Class
 
   apipie :class, desc: 'TODO A class representing a partition table object' do
+    sections only: %w[all additional]
     property :name, String, desc: 'Name of the partition table, e.g. Kickstart default'
   end
 

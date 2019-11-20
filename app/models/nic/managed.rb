@@ -3,6 +3,9 @@ module Nic
     extend ApipieDSL::Class
 
     apipie :class, desc: 'TODO A class representing a network interface object' do
+      name 'Nic::Managed'
+      sections only: %w[all additional]
+      refs 'Nic::Managed'
       property :name, String, desc: 'FQDN represented by this interface'
     end
     include Orchestration

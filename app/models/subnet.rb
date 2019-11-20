@@ -4,7 +4,7 @@ class Subnet < ApplicationRecord
   extend ApipieDSL::Class
 
   # TODO
-  apipie :class, 'Subnet' do
+  apipie :class, 'A class representing a subnet object' do
     sections only: %w[all additional]
     property :name, String, desc: 'Name of the subnet'
     property :ipam_mode, Array, of: ['DB', 'Internal'], desc: 'IPAM mode of the subnet'

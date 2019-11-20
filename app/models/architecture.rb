@@ -1,7 +1,8 @@
 class Architecture < ApplicationRecord
   extend ApipieDSL::Class
 
-  apipie :class, desc: 'TODO A class representing a partition table object' do
+  apipie :class, desc: 'TODO A class representing an architecture object' do
+    sections only: %w[all additional]
     property :name, String, desc: 'Name of the Architecture'
   end
   audited
