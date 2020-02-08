@@ -1,6 +1,14 @@
 require "resolv"
 # This models a DNS domain and so represents a site.
 class Domain < ApplicationRecord
+  extend ApipieDSL::Class
+  apipie :class, desc: 'A class representing domain object' do
+    name 'domain'
+    sections only: %w[all additional]
+    property :name, String, desc: 'Returns the domain name'
+    property :fullname, String, desc: 'Returns the domain full name'
+  end
+
   audited
   include Authorizable
   extend FriendlyId

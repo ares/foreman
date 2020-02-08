@@ -1,4 +1,16 @@
 class SshKey < ApplicationRecord
+  extend ApipieDSL::Class
+
+  apipie :class, desc: 'A class representing ssh key object' do
+    name 'SshKey'
+    sections only: %w[all additional]
+    property :name, String, desc: 'Returns the Ssh key name'
+    property :user, User, desc: 'Returns the user object which is linked to the ssh key'
+    property :key, String, desc: 'Returns the ssh key'
+    property :fingerprint, String, desc: 'Returns the fingerprint'
+    property :length, Integer, desc: 'Returns the length of the ssh key'
+  end
+
   audited :associated_with => :user
   include Authorizable
   extend FriendlyId
@@ -51,14 +63,25 @@ class SshKey < ApplicationRecord
     }
   end
 
+  apipie :method, desc: 'returns the type of the of the key' do
+    returns String, desc: 'ssh key type'
+    example '@ssh_key.type # => "ssh-rsa"'
+  end
   def type
     key.split(' ').first
   end
 
+  apipie :method, desc: 'returns the ssh key' do
+    returns String, desc: 'ssh key'
+  end
   def ssh_key
     key.split(' ')[1]
   end
 
+  apipie :method, desc: 'Return a comment ' do
+    returns String, desc: 'the comment is a combination of the user login and the forman url'
+    example '@ssh-key.comment => forman@foreman.example.com'
+  end
   def comment
     "#{user_login}@#{URI.parse(Setting[:foreman_url]).host}"
   end

@@ -12,7 +12,7 @@ class Host::Managed < Host::Base
     refs 'Host::Managed'
     property :architecture, String, desc: 'Returns a string representing the architecture of the host (e.g. "x86_64") or an empty string if no architecture is assigned (unmanaged host)'
     property :certname, String, desc: 'Returns a name used in puppet certificate, this is usually either equal to FQDN or random UUID if `use_uuid_for_certificates` setting is enabled'
-    property :compute_resources, ComputeResource, desc: 'Returns a compute resource object the host exists in, nil if no compute resource is assigned (e.g. baremetal host)'
+    property :compute_resource, ComputeResource, desc: 'Returns a compute resource object the host exists in, nil if no compute resource is assigned (e.g. baremetal host)'
     property :domain, Domain, desc: 'Returns a domain object the host primary interface belongs to, nil if no domain is assigned (unmanaged host)'
     property :environment, Environment, desc: 'Returns a string representing the puppet environment the host is assigned to (e.g. "production") or an empty string if no puppet environment is assigned'
     property :hostgroup, Hostgroup, desc: 'Returns a host group object the host is assigned to, nil if no host group is assigned'

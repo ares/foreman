@@ -1,6 +1,23 @@
 require 'digest/sha1'
 
 class User < ApplicationRecord
+  extend ApipieDSL::Class
+
+  apipie :class, desc: 'A class representing user object' do
+    name 'User'
+    sections only: %w[all additional]
+    property :login, String, desc: 'User login'
+    # TODO need array_of SshKey
+    property :ssh_keys, Array, desc: 'Returns an array of SshKey object'
+    property :ssh_authorized_keys, Array, desc: 'Returns an array of all the ssh authorized_keys'
+    property :login, String, desc: 'Returns the user login'
+    property :description, String, desc: 'Returns the user description'
+    property :firstname, String, desc: 'Returns the user first name'
+    property :lastname, String, desc: 'Returns the user Last name'
+    property :mail, String, desc: 'Returns the user mail'
+    property :last_login_on, String, desc: 'Returns the user Last login time, UTC time'
+  end
+
   audited :except => [:last_login_on, :password_hash, :password_salt, :password_confirmation],
           :associations => :roles
   include Authorizable
