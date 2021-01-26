@@ -108,7 +108,7 @@ module Api
           param :comment, String, :desc => N_("Additional information about this host")
           param :capabilities, String
           param :compute_profile_id, :number
-          param :interfaces_attributes, Array, :desc => N_("Host's network interfaces.") do
+          param :interfaces_attributes, Array, :desc => N_("Host's network interfaces. To modify interfaces of an existing host, it's crecommended to use the dedicated PUT /api/hosts/:host_id/interfaces/:id endpoint, otherwise all interfaces attributes must be specified.") do
             param :id, :number, :desc => N_("ID of interface")
             param_group :interface_attributes, ::Api::V2::InterfacesController
           end
