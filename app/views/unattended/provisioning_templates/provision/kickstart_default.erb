@@ -239,7 +239,7 @@ chrony
 <% end -%>
 wget
 @Core
-<% if os_major >= 6 -%>
+<% if os_major >= 6 && !is_fedora -%>
 redhat-lsb-core
 <% end -%>
 <% if host_param_true?('fips_enabled') -%>
